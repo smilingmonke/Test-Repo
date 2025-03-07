@@ -12,4 +12,4 @@ else:
     if not mt.login(login=li.login_id, password=li.password, server=li.server):
         print(f"Failed to login to Account #{li.login_id}")
 
-symbol = "Volatility 75 Index"
+symbol = "Volatility 25 Index"
