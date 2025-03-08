@@ -16,10 +16,10 @@ else:
         print(f"Failed to login to Account #{li.login_id}")
 
 symbol = "Volatility 75 Index"
-timeframe = mt.TIMEFRAME_M30
+timeframe = mt.TIMEFRAME_D1
 now = datetime.now()
 today = datetime.today()
-date_from = datetime(2021, 1, 1)
+date_from = datetime(2019, 1, 1)
 date_to = datetime(2025, 1, 1)
 
 data = mt.copy_rates_range(symbol, timeframe, date_from, date_to)
@@ -111,23 +111,23 @@ df_model = df[
 # df_model.hist(ax=ax)
 # plt.show()
 
-# df_up = df.RSI[df["mytarget"] == 2]
-# df_down = df.RSI[df["mytarget"] == 1]
-# df_unclear = df.RSI[df["mytarget"] == 0]
-# plt.hist(df_unclear, bins=100, alpha=0.5, label="unclear")
-# plt.hist(df_down, bins=100, alpha=0.25, label="down")
-# plt.hist(df_up, bins=100, alpha=0.5, label="up")
+df_up = df.RSI[df["mytarget"] == 2]
+df_down = df.RSI[df["mytarget"] == 1]
+df_unclear = df.RSI[df["mytarget"] == 0]
+plt.hist(df_unclear, bins=100, alpha=0.5, label="unclear")
+plt.hist(df_down, bins=100, alpha=0.25, label="down")
+plt.hist(df_up, bins=100, alpha=0.5, label="up")
 
-# plt.legend(loc="upper right")
-# plt.show()
+plt.legend(loc="upper right")
+plt.show()
 
-buy_wins = len(df[df["mytarget"] == 2])
-sell_wins = len(df[df["mytarget"] == 1])
-no_wins = len(df[df["mytarget"] == 0])
-total_wins = buy_wins + sell_wins + no_wins
-b_perc = round((buy_wins / total_wins) * 100, 2)
-s_perc = round((sell_wins / total_wins) * 100, 2)
-n_perc = round((no_wins / total_wins) * 100, 2)
-print(
-    f"Buys: {buy_wins} %{b_perc}, Sells: {sell_wins} %{s_perc}, None: {no_wins} %{n_perc}"
-)
+# buy_wins = len(df[df["mytarget"] == 2])
+# sell_wins = len(df[df["mytarget"] == 1])
+# no_wins = len(df[df["mytarget"] == 0])
+# total_wins = buy_wins + sell_wins + no_wins
+# b_perc = round((buy_wins / total_wins) * 100, 2)
+# s_perc = round((sell_wins / total_wins) * 100, 2)
+# n_perc = round((no_wins / total_wins) * 100, 2)
+# print(
+#     f"Buys: {buy_wins} %{b_perc}, Sells: {sell_wins} %{s_perc}, None: {no_wins} %{n_perc}"
+# )
