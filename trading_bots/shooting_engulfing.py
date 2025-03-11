@@ -130,13 +130,11 @@ def Revsignal1():
 
     for row in range(1, length):
 
-        if (
-            isEngulfing(row) == 1 or isStar(row) == 1 and df.rsi[row] < 30
-        ):  # and df.rsi[row] < 30
+        if isEngulfing(row) == 1 or isStar(row) == 1:  # and df.rsi[row] < 30
             signal[row] = 1
         elif (
-            isEngulfing(row) == 2 or isStar(row) == 2 and df.rsi[row] > 70
-        ):  # and df.rsi[row] > 70
+            isEngulfing(row) == 2 or isStar(row) == 2
+        ):  #  df.atr[row] > df.atr_avg[row] and df.rsi[row] > 70
             signal[row] = 2
         else:
             signal[row] = 0
@@ -180,14 +178,14 @@ df["trend"] = mytarget(df, 10)
 # print(df.head(30))
 
 conditions = [
-    (df["trend"] == 1) | (df["trend"] == 3) & (df["signal"] == 1),
-    (df["trend"] == 2) | (df["trend"] == 3) & (df["signal"] == 2),
-]
+    (df["trend"] == 1) & (df["signal"] == 1),
+    (df["trend"] == 2) & (df["signal"] == 2),
+]  # | (df["trend"] == 3)
 values = [1, 2]
 df["result"] = np.select(conditions, values)
-trendId = 1
+trendId = 2
 print(
-    f"For Id= {trendId}  %{df[df["result"] == trendId].result.count() / df[df["signal"] == trendId].signal.count()}"
+    f"For Id= {trendId}  {df[df["result"] == trendId].result.count() / df[df["signal"] == trendId].signal.count()}"
 )
 # print(
 #     df[(df["result"] != trendId) & (df["signal"] == trendId)].head(10)
