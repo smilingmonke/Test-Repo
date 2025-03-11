@@ -4,7 +4,7 @@ import pandas_ta as ta
 import plotly.graph_objects as go
 from datetime import datetime
 
-df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
+df = pd.read_csv("trading_bots\\v75_M_15_2023-2025.csv")
 
 
 # Identify engulfing pattern
@@ -46,7 +46,11 @@ def Revsignal1(df1):
 
 
 df["signal1"] = Revsignal1(df)
-# print(df[df["signal1"] == 2].count())
+# print(f"Bearish Signals: {df[df["signal1"] == 1].count()} ")
+# print(f"Bullish Signals: {df[df["signal1"] == 2].count()} ")
+# print(
+#     f"Total Signals: {df[df["signal1"] == 1].count() + df[df["signal1"] == 2].count()} "
+# )
 
 
 def mytarget(barsupfront, df1):
@@ -57,7 +61,7 @@ def mytarget(barsupfront, df1):
     open = list(df["open"])
     trendcat = [None] * length
 
-    ticklim = 7000
+    ticklim = 1000
 
     for line in range(0, length - 1 - barsupfront):
         for i in range(1, barsupfront + 1):
@@ -87,9 +91,9 @@ values = [1, 2]
 df["result"] = np.select(conditions, values)
 
 trendId = 1
-print(
-    f"For Id={trendId} %{df[df["result"] == trendId].result.count() / df[df["signal1"] == trendId].signal1.count()}"
-)
+# print(
+#     f"For Id={trendId} %{df[df["result"] == trendId].result.count() / df[df["signal1"] == trendId].signal1.count()}"
+# )
 # print(
 #     df[(df["result"] != trendId) & (df["signal1"] == trendId)].head(10)
 # )  # false positives

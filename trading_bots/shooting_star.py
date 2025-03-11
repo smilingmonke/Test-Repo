@@ -32,7 +32,7 @@ def Revsignal1(df1):
         if bodydiff[row] < 2 * 1e-3:
             bodydiff[row] = 2 * 1e-3
 
-        lowdiff[row] = min(open[row], close[row] - low[row])
+        lowdiff[row] = min(open[row], close[row]) - low[row]
         ratio1[row] = highdiff[row] / bodydiff[row]
         ratio2[row] = lowdiff[row] / bodydiff[row]
 
