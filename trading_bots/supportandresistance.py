@@ -36,36 +36,40 @@ n2 = 2
 ss = []
 rr = []
 
-for row in range(n1, 200):
+for row in range(n1, len(df) - n2):
     if support(df, row, n1, n2):
         ss.append((row, df.low[row]))
     if resistance(df, row, n1, n2):
         rr.append((row, df.high[row]))
-print(ss)
-
-for i in range(1, len(ss)):
-    # if i >= len(ss):
-    #     break
-    if ss[i][1] < ss[i - 1][1]:
-        ss[i], ss[i - 1] = ss[i - 1], ss[i]
-print(ss)
 
 
-# for i in range(1, len(ss)):
-#     if i >= len(ss):
-#         break
-#     if abs(ss[i][1] - ss[i - 1][1]) <= 3e3:
-#         del ss[i]
+for i in range(0, len(ss) - 1):
+    for j in range(0, len(ss) - 1 - i):
+        if ss[j][1] > ss[j + 1][1]:
+            ss[j], ss[j + 1] = ss[j + 1], ss[j]
 
-# for i in range(1, len(rr)):
-#     if i >= len(rr):
-#         break
-#     if abs(rr[i][1] - rr[i - 1][1]) <= 3e3:
-#         del rr[i]
+for i in range(0, len(rr) - 1):
+    for j in range(0, len(rr) - 1 - i):
+        if rr[j][1] > rr[j + 1][1]:
+            rr[j], rr[j + 1] = rr[j + 1], rr[j]
+
+for i in range(0, len(ss) - 1):
+    for j in range(0, len(ss) - 1 - i):
+        if j >= len(ss) - 1 - i:
+            break
+        if abs(ss[j][1] - ss[j + 1][1]) <= 3e4:
+            del ss[j]
+
+for i in range(0, len(rr) - 1):
+    for j in range(0, len(rr) - 1 - i):
+        if j >= len(rr) - 1 - i:
+            break
+        if abs(rr[j][1] - rr[j + 1][1]) <= 3e4:
+            del rr[j]
 
 
 s = 0
-e = 200
+e = len(df)
 dfpl = df[s:e]
 
 fig = go.Figure(
@@ -104,8 +108,8 @@ while 1:
         y0=rr[c][1],
         x1=e,
         y1=rr[c][1],
-        line=dict(color="SkyBlue", width=1),
+        line=dict(color="RoyalBlue", width=2),
     )
     c += 1
 
-# fig.show()
+fig.show()
