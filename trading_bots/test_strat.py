@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
+df = pd.read_csv("trading_bots\\v75_M_15_2023-2025.csv")
 
 
 def support(df1, l, n1, n2):
@@ -165,10 +165,10 @@ for row in range(backCandles, len(df) - n2):
 
 df["signal"] = signal
 
-print(df[df["signal"] == 1].count())
+# print(df[df["signal"] == 1].count())
+# print(df[df["signal"] == 2].count())
 
-
-SLTPRatio = 2
+SLTPRatio = 1  # 2
 
 
 def mytarget(barsupfront, df1):
@@ -191,4 +191,76 @@ def mytarget(barsupfront, df1):
             TP = close[line] - SLTPRatio * (SL - close[line])
 
             for i in range(1, barsupfront + 1):
-                pass
+                if low[line + i] <= TP and high[line + i] >= SL:
+                    trendcat[line] = 3
+                    break
+                elif low[line + i] <= TP:
+                    trendcat[line] = 1
+                    amount[line] = close[line] - low[line + i]
+                    break
+                elif high[line + i] >= SL:
+                    trendcat[line] = 2
+                    amount[line] = close[line] - high[line + i]
+                    break
+
+        elif signal[line] == 2:
+            SL = min(low[line - 1 : line + 1])
+            TP = close[line] + SLTPRatio * (close[line] - SL)
+
+            for i in range(1, barsupfront + 1):
+                if high[line + i] >= TP and low[line + i] <= SL:
+                    trendcat[line] = 3
+                    break
+                elif high[line + i] >= TP:
+                    trendcat[line] = 2
+                    amount[line] = high[line + i] - close[line]
+                    break
+                elif low[line + i] <= SL:
+                    trendcat[line] = 1
+                    amount[line] = low[line + i] - close[line]
+                    break
+
+    return trendcat, amount
+
+
+df["trend"] = mytarget(16, df)[0]
+df["amount"] = mytarget(16, df)[1]
+
+
+df[df["amount"] != 0]
+print(f"For RR: {SLTPRatio} P&L/y = ${df["amount"].sum() / 2:,.2f}")
+conditions = [
+    (df["trend"] == 1) & (df["signal"] == 1),
+    (df["trend"] == 2) & (df["signal"] == 2),
+]
+values = [1, 2]
+df["result"] = np.select(conditions, values)
+
+
+# trendId = 1
+# print(
+#     df[df["result"] == trendId].result.count()
+#     / df[df["signal"] == trendId].signal.count()
+# )
+# trendId = 2
+# print(
+#     df[df["result"] == trendId].result.count()
+#     / df[df["signal"] == trendId].signal.count()
+# )
+# print(df[(df["trend"] != trendId) & (df["trend"] != 3) & (df["signal"] == trendId)])
+s, e = 0, 200
+dfpl = df[s:e]
+
+fig = go.Figure(
+    data=[
+        go.Candlestick(
+            x=dfpl.index,
+            open=dfpl["open"],
+            high=dfpl["high"],
+            low=dfpl["low"],
+            close=dfpl["close"],
+        )
+    ]
+)
+
+# fig.show()
