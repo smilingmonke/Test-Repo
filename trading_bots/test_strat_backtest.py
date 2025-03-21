@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from backtesting import Strategy, Backtest
 
 
-df = pd.read_csv("trading_bots\\v75_H_1_2019-2025.csv")
+df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
 
 
 def support(df1, l, n1, n2):
@@ -188,111 +188,17 @@ class MyCandlesStrat(Strategy):
     def next(self):
         super().next()
         if self.signal1 == 2:
-            sl1 = self.data.Close[-1] - 7e3
-            tp1 = self.data.Close[-1] + 7e3
-            self.buy(sl=sl1, tp=tp1, size=0.001)
+            sl1 = self.data.Close[-1] - 1e3
+            tp1 = self.data.Close[-1] + 1e3
+            self.buy(sl=sl1, tp=tp1)
         elif self.signal1 == 1:
-            sl1 = self.data.Close[-1] + 7e3
-            tp1 = self.data.Close[-1] - 7e3
-            self.sell(sl=sl1, tp=tp1, size=0.001)
+            sl1 = self.data.Close[-1] + 1e3
+            tp1 = self.data.Close[-1] - 1e3
+            self.sell(sl=sl1, tp=tp1)
 
 
-bt = Backtest(df, MyCandlesStrat, cash=1_000_000, commission=0.002, margin=0.000001)
+bt = Backtest(df, MyCandlesStrat, cash=1_000_000, commission=0.0, margin=1)
 stats = bt.run()
-# print(stats)
+print(stats)
 
-
-def mytarget(barsupfront, df1):
-
-    length = len(df1)
-    high = list(df1["high"])
-    low = list(df1["low"])
-    open = list(df1["open"])
-    close = list(df1["close"])
-    signal = list(df1["signal"])
-    trendcat = [0] * length
-    amount = [0] * length
-
-    SL = 0
-    TP = 0
-    for line in range(backCandles, length - barsupfront - n2):
-
-        if signal[line] == 1:
-            SL = max(high[line - 1 : line + 1])
-            TP = close[line] - RRRatio * (SL - close[line])
-
-            for i in range(1, barsupfront + 1):
-                if low[line + i] <= TP and high[line + i] >= SL:
-                    trendcat[line] = 3
-                    break
-                elif low[line + i] <= TP:
-                    trendcat[line] = 1
-                    amount[line] = close[line] - low[line + i]
-                    break
-                elif high[line + i] >= SL:
-                    trendcat[line] = 2
-                    amount[line] = close[line] - high[line + i]
-                    break
-
-        elif signal[line] == 2:
-            SL = min(low[line - 1 : line + 1])
-            TP = close[line] + (RRRatio * (close[line] - SL))
-
-            for i in range(1, barsupfront + 1):
-                if high[line + i] >= TP and low[line + i] <= SL:
-                    trendcat[line] = 3
-                    break
-                elif high[line + i] >= TP:
-                    trendcat[line] = 2
-                    amount[line] = high[line + i] - close[line]
-                    break
-                elif low[line + i] <= SL:
-                    trendcat[line] = 1
-                    amount[line] = low[line + i] - close[line]
-                    break
-
-    return trendcat, amount
-
-
-# df["trend"] = mytarget(16, df)[0]
-# df["amount"] = mytarget(16, df)[1]
-
-
-# df[df["amount"] != 0]
-# print(f"For RR: {RRRatio} P&L/y = ${df["amount"].sum() / 6:,.2f}")
-# conditions = [
-#     (df["trend"] == 1) & (df["signal"] == 1),
-#     (df["trend"] == 2) & (df["signal"] == 2),
-# ]
-# values = [1, 2]
-# df["result"] = np.select(conditions, values)
-
-
-# trendId = 1
-# print(
-#     df[df["result"] == trendId].result.count()
-#     / df[df["signal"] == trendId].signal.count()
-# )
-# trendId = 2
-# print(
-#     df[df["result"] == trendId].result.count()
-#     / df[df["signal"] == trendId].signal.count()
-# )
-# print(df[(df["trend"] != trendId) & (df["trend"] != 3) & (df["signal"] == trendId)])
-# s, e = 0, 200
-# dfpl = df[s:e]
-
-# fig = go.Figure(
-#     data=[
-#         go.Candlestick(
-#             x=dfpl.index,
-#             open=dfpl["open"],
-#             high=dfpl["high"],
-#             low=dfpl["low"],
-#             close=dfpl["close"],
-#         )
-#     ]
-# )
-
-# fig.show()
-# print(df)
+bt.plot(show_legend=False)

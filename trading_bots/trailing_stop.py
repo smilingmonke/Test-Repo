@@ -4,10 +4,19 @@ import pandas_ta as ta
 import plotly.graph_objects as go
 from datetime import datetime
 import matplotlib.pyplot as plt
+from backtesting import Strategy, Backtest
 
-df = pd.read_csv("trading_bots\\v75_H_1_2019-2025.csv")
+# Reads csv and coverts it pandas dataframe/df
+df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
+
+# Adds the atr indicator to the df
+df["atr"] = ta.atr(high=df.high, low=df.low, close=df.close, length=14)
+
+# Prints the last x amount of rows of the df
+# print(df.tail(20))
 
 
+#!!! Support and Resistance functions
 def support(df1, l, n1, n2):
     for i in range(l - n1 + 1, l + 1):
         if df1.low[i] > df1.low[i - 1]:
@@ -27,21 +36,30 @@ def resistance(df1, l, n1, n2):
     for i in range(l + 1, l + n2 + 1):
         if df1.high[i] > df1.high[i - 1]:
             return 0
+
     return 1
 
 
+# Takes the values of df a puts them into separate lists
 length = len(df)
-open = list(df["open"])
 high = list(df["high"])
 low = list(df["low"])
 close = list(df["close"])
+open = list(df["open"])
 bodydiff = [0] * length
+
+# Defines varibles which will be used in the following functions
 highdiff = [0] * length
 lowdiff = [0] * length
 ratio1 = [0] * length
 ratio2 = [0] * length
 
+# Volatility 75 set
+mybodydiff = 1
+mybodydiffmin = 3e2
 
+
+#!!! Engulfing bar pattern function
 def isEngulfing(l):
 
     row = l
@@ -72,6 +90,7 @@ def isEngulfing(l):
         return 0
 
 
+#!!! Shooting star bar pattern function
 def isStar(l):
     bodydiffmin = 100
     row = l
@@ -99,11 +118,16 @@ def isStar(l):
         return 0
 
 
+#!!! Determines if a candle is close to a Resistance level
 def closeResistance(l, levels, lim):
     if len(levels) == 0:
         return 0
 
+    # lim = df.atr[l]/2
+
+    # diff between high and closet level among levels
     c1 = abs(df.high[l] - min(levels, key=lambda x: abs(x - df.high[l]))) <= lim
+    # diff between higher body and closest level to high
     c2 = (
         abs(
             max(df.open[l], df.close[l])
@@ -111,7 +135,9 @@ def closeResistance(l, levels, lim):
         )
         <= lim
     )
+    # min body less than closest level to high
     c3 = min(df.open[l], df.close[l]) < min(levels, key=lambda x: abs(x - df.high[l]))
+    # low price less than closet level to high
     c4 = df.low[l] < min(levels, key=lambda x: abs(x - df.high[l]))
 
     if c1 or c2 and c3 and c4:
@@ -120,6 +146,7 @@ def closeResistance(l, levels, lim):
         return 0
 
 
+#!!! Determines if a candle is close to a Support level
 def closeSupport(l, levels, lim):
     if len(levels) == 0:
         return 0
@@ -140,127 +167,43 @@ def closeSupport(l, levels, lim):
         return 0
 
 
+# Variables needed for the functions above
 n1 = 2
 n2 = 2
-backCandles = 2
+backCandles = 3
 signal = [0] * length
 
 for row in range(backCandles, len(df) - n2):
+    # list of the different levels
     ss = []
     rr = []
 
     for subrow in range(row - backCandles + n1, row + 1):
+        # Adding the candle who meets the requirement to be a level
         if support(df, subrow, n1, n2):
             ss.append(df.low[subrow])
         if resistance(df, subrow, n1, n2):
             rr.append(df.high[subrow])
 
-    if (isEngulfing(row) == 1 or isStar(row) == 1) and closeResistance(row, rr, 3e3):
-        signal[row] = 1
-    elif (isEngulfing(row) == 2 or isStar(row) == 2) and closeSupport(row, ss, 3e3):
-        signal[row] = 2
+    # Checking if the current candle/row is a engulfing/star pattern and if it is close to a level then assigning a value to the signal list
+    myclosedistance = 1e3
+    print(ss, rr)
+    if (
+        isEngulfing(row) == 1
+        or isStar(row) == 1
+        and closeResistance(row, rr, myclosedistance)
+    ):
+        signal[row] == 1
+    elif (
+        isEngulfing(row) == 2
+        or isStar(row) == 2
+        and closeSupport(row, ss, myclosedistance)
+    ):
+        signal[row] == 2
     else:
-        signal[row] = 0
+        signal[row] == 0
 
-print(ss, rr)
+
 df["signal"] = signal
 
-# print(df[df["signal"] == 1].count())
-# print(df[df["signal"] == 2].count())
-
-SLTPRatio = 1  # 2
-
-
-def mytarget(barsupfront, df1):
-
-    length = len(df1)
-    high = list(df1["high"])
-    low = list(df1["low"])
-    open = list(df1["open"])
-    close = list(df1["close"])
-    signal = list(df1["signal"])
-    trendcat = [0] * length
-    amount = [0] * length
-
-    SL = 0
-    TP = 0
-    for line in range(backCandles, length - barsupfront - n2):
-
-        if signal[line] == 1:
-            SL = max(high[line - 1 : line + 1])
-            TP = close[line] - SLTPRatio * (SL - close[line])
-
-            for i in range(1, barsupfront + 1):
-                if low[line + i] <= TP and high[line + i] >= SL:
-                    trendcat[line] = 3
-                    break
-                elif low[line + i] <= TP:
-                    trendcat[line] = 1
-                    amount[line] = close[line] - low[line + i]
-                    break
-                elif high[line + i] >= SL:
-                    trendcat[line] = 2
-                    amount[line] = close[line] - high[line + i]
-                    break
-
-        elif signal[line] == 2:
-            SL = min(low[line - 1 : line + 1])
-            TP = close[line] + SLTPRatio * (close[line] - SL)
-
-            for i in range(1, barsupfront + 1):
-                if high[line + i] >= TP and low[line + i] <= SL:
-                    trendcat[line] = 3
-                    break
-                elif high[line + i] >= TP:
-                    trendcat[line] = 2
-                    amount[line] = high[line + i] - close[line]
-                    break
-                elif low[line + i] <= SL:
-                    trendcat[line] = 1
-                    amount[line] = low[line + i] - close[line]
-                    break
-
-    return trendcat, amount
-
-
-df["trend"] = mytarget(16, df)[0]
-df["amount"] = mytarget(16, df)[1]
-
-
-df[df["amount"] != 0]
-# print(f"For RR: {SLTPRatio} P&L/y = ${df["amount"].sum() / 6:,.2f}")
-conditions = [
-    (df["trend"] == 1) & (df["signal"] == 1),
-    (df["trend"] == 2) & (df["signal"] == 2),
-]
-values = [1, 2]
-df["result"] = np.select(conditions, values)
-
-
-# trendId = 1
-# print(
-#     df[df["result"] == trendId].result.count()
-#     / df[df["signal"] == trendId].signal.count()
-# )
-# trendId = 2
-# print(
-#     df[df["result"] == trendId].result.count()
-#     / df[df["signal"] == trendId].signal.count()
-# )
-# print(df[(df["trend"] != trendId) & (df["trend"] != 3) & (df["signal"] == trendId)])
-s, e = 0, 200
-dfpl = df[s:e]
-
-fig = go.Figure(
-    data=[
-        go.Candlestick(
-            x=dfpl.index,
-            open=dfpl["open"],
-            high=dfpl["high"],
-            low=dfpl["low"],
-            close=dfpl["close"],
-        )
-    ]
-)
-
-# fig.show()
+# print(f"1:{df[df["signal"] == 1].count()} \n2:{df[df["signal"] == 2].count()}")
