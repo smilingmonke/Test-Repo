@@ -162,7 +162,7 @@ for row in range(backCandles, len(df) - n2):
     else:
         signal[row] = 0
 
-print(ss, rr)
+
 df["signal"] = signal
 
 # print(df[df["signal"] == 1].count())

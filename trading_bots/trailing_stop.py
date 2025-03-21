@@ -10,7 +10,7 @@ from backtesting import Strategy, Backtest
 df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
 
 # Adds the atr indicator to the df
-df["atr"] = ta.atr(high=df.high, low=df.low, close=df.close, length=14)
+df["ATR"] = ta.atr(high=df.high, low=df.low, close=df.close, length=14)
 
 # Prints the last x amount of rows of the df
 # print(df.tail(20))
@@ -36,30 +36,21 @@ def resistance(df1, l, n1, n2):
     for i in range(l + 1, l + n2 + 1):
         if df1.high[i] > df1.high[i - 1]:
             return 0
-
     return 1
 
 
-# Takes the values of df a puts them into separate lists
 length = len(df)
+open = list(df["open"])
 high = list(df["high"])
 low = list(df["low"])
 close = list(df["close"])
-open = list(df["open"])
 bodydiff = [0] * length
-
-# Defines varibles which will be used in the following functions
 highdiff = [0] * length
 lowdiff = [0] * length
 ratio1 = [0] * length
 ratio2 = [0] * length
 
-# Volatility 75 set
-mybodydiff = 1
-mybodydiffmin = 3e2
 
-
-#!!! Engulfing bar pattern function
 def isEngulfing(l):
 
     row = l
@@ -90,7 +81,6 @@ def isEngulfing(l):
         return 0
 
 
-#!!! Shooting star bar pattern function
 def isStar(l):
     bodydiffmin = 100
     row = l
@@ -118,16 +108,11 @@ def isStar(l):
         return 0
 
 
-#!!! Determines if a candle is close to a Resistance level
 def closeResistance(l, levels, lim):
     if len(levels) == 0:
         return 0
 
-    # lim = df.atr[l]/2
-
-    # diff between high and closet level among levels
     c1 = abs(df.high[l] - min(levels, key=lambda x: abs(x - df.high[l]))) <= lim
-    # diff between higher body and closest level to high
     c2 = (
         abs(
             max(df.open[l], df.close[l])
@@ -135,9 +120,7 @@ def closeResistance(l, levels, lim):
         )
         <= lim
     )
-    # min body less than closest level to high
     c3 = min(df.open[l], df.close[l]) < min(levels, key=lambda x: abs(x - df.high[l]))
-    # low price less than closet level to high
     c4 = df.low[l] < min(levels, key=lambda x: abs(x - df.high[l]))
 
     if c1 or c2 and c3 and c4:
@@ -146,7 +129,6 @@ def closeResistance(l, levels, lim):
         return 0
 
 
-#!!! Determines if a candle is close to a Support level
 def closeSupport(l, levels, lim):
     if len(levels) == 0:
         return 0
@@ -167,43 +149,138 @@ def closeSupport(l, levels, lim):
         return 0
 
 
-# Variables needed for the functions above
 n1 = 2
 n2 = 2
-backCandles = 3
+backCandles = 2
 signal = [0] * length
 
 for row in range(backCandles, len(df) - n2):
-    # list of the different levels
     ss = []
     rr = []
 
     for subrow in range(row - backCandles + n1, row + 1):
-        # Adding the candle who meets the requirement to be a level
         if support(df, subrow, n1, n2):
             ss.append(df.low[subrow])
         if resistance(df, subrow, n1, n2):
             rr.append(df.high[subrow])
 
-    # Checking if the current candle/row is a engulfing/star pattern and if it is close to a level then assigning a value to the signal list
-    myclosedistance = 1e3
-    print(ss, rr)
-    if (
-        isEngulfing(row) == 1
-        or isStar(row) == 1
-        and closeResistance(row, rr, myclosedistance)
-    ):
-        signal[row] == 1
-    elif (
-        isEngulfing(row) == 2
-        or isStar(row) == 2
-        and closeSupport(row, ss, myclosedistance)
-    ):
-        signal[row] == 2
+    if (isEngulfing(row) == 1 or isStar(row) == 1) and closeResistance(row, rr, 3e3):
+        signal[row] = 1
+    elif (isEngulfing(row) == 2 or isStar(row) == 2) and closeSupport(row, ss, 3e3):
+        signal[row] = 2
     else:
-        signal[row] == 0
+        signal[row] = 0
 
 
 df["signal"] = signal
-
 # print(f"1:{df[df["signal"] == 1].count()} \n2:{df[df["signal"] == 2].count()}")
+
+df.columns = ["Local time", "Open", "High", "Low", "Close", "ATR", "signal"]
+
+
+def SIGNAL():
+    return df.signal
+
+
+def ATR():
+    return df.ATR
+
+
+#!!!!!!! Fixed sl and tp return %171
+# class MyCandlesStrat(Strategy):
+#     def init(self):
+#         super().init()
+#         self.signal1 = self.I(SIGNAL)
+
+#     def next(self):
+#         super().next()
+#         if self.signal1 == 2:
+#             sl1 = self.data.Close[-1] - 9e3
+#             tp1 = self.data.Close[-1] + 9.9e3
+#             self.buy(sl=sl1, tp=tp1)
+#         elif self.signal1 == 1:
+#             sl1 = self.data.Close[-1] + 9e3
+#             tp1 = self.data.Close[-1] - 9.9e3
+#             self.sell(sl=sl1, tp=tp1)
+
+
+#!!!!!!! atr sl and tp return %1158
+# class MyCandlesStrat(Strategy):
+#     atr_f = 1
+#     ratio_f = 2
+
+#     def init(self):
+#         super().init()
+#         self.signal1 = self.I(SIGNAL)
+#         self.atr1 = self.I(ATR)
+#     def next(self):
+#         super().next()
+#         if self.signal1 == 2:
+#             sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
+#             tp1 = self.data.Close[-1] + self.data.ATR[-1] * self.ratio_f / self.atr_f
+#             self.buy(sl=sl1, tp=tp1)
+#         elif self.signal1 == 1:
+#             sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
+#             tp1 = self.data.Close[-1] - self.data.ATR[-1] * self.ratio_f / self.atr_f
+#             self.sell(sl=sl1, tp=tp1)
+
+
+#!!!!!!! fixed sl and tp with trailing stop return %439 w/ no limit on trades %388 w/ limit on number of trades
+# class MyCandlesStrat(Strategy):
+#     sltr = 9e3
+
+#     def init(self):
+#         super().init()
+#         self.signal1 = self.I(SIGNAL)
+
+#     def next(self):
+#         super().next()
+#         sltr = self.sltr
+#         for trade in self.trades:
+#             if trade.is_long:
+#                 trade.sl = max(trade.sl or -np.inf, self.data.Close[-1] - sltr)
+#             else:
+#                 trade.sl = min(trade.sl or np.inf, self.data.Close[-1] + sltr)
+
+#         if self.signal1 == 2:  # and len(self.trades) == 0
+#             sl1 = self.data.Close[-1] - sltr
+#             self.buy(sl=sl1)
+#         elif self.signal1 == 1:  # and len(self.trades) == 0
+#             sl1 = self.data.Close[-1] + sltr
+#             self.sell(sl=sl1)
+
+
+#!!!!!!! atr sl with trailing stop
+class MyCandlesStrat(Strategy):
+    atr_f = 1
+
+    def init(self):
+        super().init()
+        self.signal1 = self.I(SIGNAL)
+        self.atr1 = self.I(ATR)
+        for trade in self.trades:
+            if trade.is_long:
+                trade.sl = max(
+                    trade.sl or -np.inf,
+                    self.data.Close[-1] - self.data.ATR[-1] / self.atr_f,
+                )
+            else:
+                trade.sl = min(
+                    trade.sl or np.inf,
+                    self.data.Close[-1] + self.data.ATR[-1] / self.atr_f,
+                )
+
+    def next(self):
+        super().next()
+        if self.signal1 == 2:  # and len(self.trades) == 0
+            sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
+            self.buy(sl=sl1)
+        elif self.signal1 == 1:  # and len(self.trades) == 0
+            sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
+            self.sell(sl=sl1)
+
+
+bt = Backtest(df, MyCandlesStrat, cash=100_000_000, commission=0.0, margin=1)
+stats = bt.run()
+print(stats)
+# print(df)
