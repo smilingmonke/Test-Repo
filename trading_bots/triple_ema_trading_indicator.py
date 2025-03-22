@@ -101,6 +101,7 @@ def alert():
 
     if df_live.iloc[-1]["signal"] == 1 and df_live.iloc[-2]["signal"] != 1:
         msg = str(f"SELL {df.Close.iloc[-1]}")
+        print(msg)
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.ehlo()
         server.login(gmail_user, gmail_password)
@@ -108,6 +109,7 @@ def alert():
         server.close()
     elif df_live.iloc[-1]["signal"] == -1 and df_live.iloc[-2]["signal"] != -1:
         msg = str(f"BUY {df.Close.iloc[-1]}")
+        print(msg)
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.ehlo()
         server.login(gmail_user, gmail_password)
