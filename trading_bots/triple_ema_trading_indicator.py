@@ -11,17 +11,17 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 import email_info as ei
 
 # Reads csv and coverts it pandas dataframe/df
-df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
+# df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
 
-# Implements the MAs into the df
-df["ma20"] = ta.ema(df.Close, length=20)
-df["ma30"] = ta.ema(df.Close, length=30)
-df["ma60"] = ta.ema(df.Close, length=60)
+# # Implements the MAs into the df
+# df["ma20"] = ta.ema(df.Close, length=20)
+# df["ma30"] = ta.ema(df.Close, length=30)
+# df["ma60"] = ta.ema(df.Close, length=60)
 
-# print(df.tail(20))
+# # print(df.tail(20))
 
 
-#!!! Determines if the signal conditions are met
+# #!!! Determines if the signal conditions are met
 def mysig(x):
     if x.ma20 < x.ma30 < x.ma60:
         return -1
@@ -31,32 +31,32 @@ def mysig(x):
         return 0
 
 
-# Adds a signal column using the result from the function
-df["signal"] = df.apply(mysig, axis=1)
+# # Adds a signal column using the result from the function
+# df["signal"] = df.apply(mysig, axis=1)
 
-dfpl = df[100:1000]
+# dfpl = df[100:1000]
 
-# draws the figure
-fig = go.Figure(
-    data=[
-        go.Candlestick(
-            x=dfpl.index,
-            open=dfpl["Open"],
-            high=dfpl["High"],
-            low=dfpl["Low"],
-            close=dfpl["Close"],
-        ),
-        go.Scatter(
-            x=dfpl.index, y=dfpl.ma20, line=dict(color="green", width=1), name="EMA20"
-        ),
-        go.Scatter(
-            x=dfpl.index, y=dfpl.ma30, line=dict(color="blue", width=2), name="EMA30"
-        ),
-        go.Scatter(
-            x=dfpl.index, y=dfpl.ma60, line=dict(color="purple", width=3), name="EMA60"
-        ),
-    ]
-)
+# # draws the figure
+# fig = go.Figure(
+#     data=[
+#         go.Candlestick(
+#             x=dfpl.index,
+#             open=dfpl["Open"],
+#             high=dfpl["High"],
+#             low=dfpl["Low"],
+#             close=dfpl["Close"],
+#         ),
+#         go.Scatter(
+#             x=dfpl.index, y=dfpl.ma20, line=dict(color="green", width=1), name="EMA20"
+#         ),
+#         go.Scatter(
+#             x=dfpl.index, y=dfpl.ma30, line=dict(color="blue", width=2), name="EMA30"
+#         ),
+#         go.Scatter(
+#             x=dfpl.index, y=dfpl.ma60, line=dict(color="purple", width=3), name="EMA60"
+#         ),
+#     ]
+# )
 # fig.add_scatter(x=dfpl.index, y=dfpl["pointpos"], mode="markers", marker=dict(size=5, color="yellow", name="pivot"))
 # fig.update_layout(xaxis_rangeslider_visible=False)
 
@@ -100,7 +100,7 @@ def alert():
     df_live["signal"] = df_live.apply(mysig, axis=1)
 
     if df_live.iloc[-1]["signal"] == 1 and df_live.iloc[-2]["signal"] != 1:
-        msg = str(f"SELL {df.Close.iloc[-1]}")
+        msg = str(f"SELL {df_live.Close.iloc[-1]}")
         print(msg)
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.ehlo()
@@ -108,7 +108,7 @@ def alert():
         server.sendmail(sent_from, to, msg)
         server.close()
     elif df_live.iloc[-1]["signal"] == -1 and df_live.iloc[-2]["signal"] != -1:
-        msg = str(f"BUY {df.Close.iloc[-1]}")
+        msg = str(f"BUY {df_live.Close.iloc[-1]}")
         print(msg)
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.ehlo()
