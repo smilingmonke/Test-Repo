@@ -1,5 +1,4 @@
 import json
-import smtplib
 import pandas as pd
 import numpy as np
 import pandas_ta as ta
@@ -8,7 +7,7 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from backtesting import Strategy, Backtest
 from apscheduler.schedulers.blocking import BlockingScheduler
-import email_info as ei
+
 
 # Reads csv and coverts it pandas dataframe/df
 df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
@@ -63,12 +62,6 @@ fig = go.Figure(
 # fig.show()
 
 
-gmail_user = ei.email
-gmail_password = ei.password
-sent_from = gmail_user
-to = [ei.email]
-subject = "info signal"
-
 import MetaTrader5 as mt
 import login_info as li
 
@@ -93,28 +86,30 @@ def alert():
     df_live.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
     df_live.columns = ["Local time", "Open", "High", "Low", "Close"]
 
+    df_live["atr"] = ta.atr(
+        high=df_live.High, low=df_live.Low, close=df.Close, length=14
+    )
     df_live["ma20"] = ta.ema(df_live.Close, length=20)
     df_live["ma30"] = ta.ema(df_live.Close, length=30)
     df_live["ma60"] = ta.ema(df_live.Close, length=60)
 
     df_live["signal"] = df_live.apply(mysig, axis=1)
 
+    latest_close = df.Close.iloc[-1]
+    latest_atr = df.atr.iloc[-1]
+    SLTPRatio = 1
+
     if df_live.iloc[-1]["signal"] == 1 and df_live.iloc[-2]["signal"] != 1:
-        msg = str(f"SELL {df.Close.iloc[-1]}")
+        sl = latest_close + latest_atr
+        tp = latest_close - (latest_atr * SLTPRatio)
+        msg = str(f"@{symbol}, SELL:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.ehlo()
-        server.login(gmail_user, gmail_password)
-        server.sendmail(sent_from, to, msg)
-        server.close()
+
     elif df_live.iloc[-1]["signal"] == -1 and df_live.iloc[-2]["signal"] != -1:
-        msg = str(f"BUY {df.Close.iloc[-1]}")
+        sl = latest_close - latest_atr
+        tp = latest_close + (latest_atr * SLTPRatio)
+        msg = str(f"@{symbol}, BUY:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.ehlo()
-        server.login(gmail_user, gmail_password)
-        server.sendmail(sent_from, to, msg)
-        server.close()
 
 
 scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})

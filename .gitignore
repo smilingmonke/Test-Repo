@@ -1,5 +1,5 @@
 .vscode
-login_info.py
-email_info.py
+*info.py
 __pycache__
 tempCodeRunnerFile.py
+discord*
