@@ -33,13 +33,14 @@ else:
 
 def alert():
     symbol = "Volatility 75 Index"
-    timeframe = mt.TIMEFRAME_H1
+    timeframe = mt.TIMEFRAME_M1
     now = datetime.now()
+    yesterday = now - timedelta(days=1)
     today = datetime.today()
     date_from = today - timedelta(days=12)
     date_to = datetime(2025, 1, 1)
 
-    data = mt.copy_rates_range(symbol, timeframe, date_from, now)
+    data = mt.copy_rates_range(symbol, timeframe, yesterday, now)
     df = pd.DataFrame(data)
     df["time"] = pd.to_datetime(df["time"], unit="s")
     df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
@@ -86,5 +87,5 @@ def alert():
 
 
 scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})
-scheduler.add_job(alert, "cron", hour="*/1", minute=5)
+scheduler.add_job(alert, "cron", minute=5)
 scheduler.start()
