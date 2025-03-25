@@ -50,7 +50,7 @@ def alert():
 
     df["atr"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
     df["ma10"] = ta.sma(df.Close, length=10)
-    df["ma20"] = ta.sma(df.Close, length=21)
+    df["ma21"] = ta.sma(df.Close, length=21)
     df["ma101"] = ta.sma(df.Close, length=101)
     df["ma201"] = ta.sma(df.Close, length=201)
 
