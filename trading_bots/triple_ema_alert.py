@@ -72,5 +72,5 @@ def alert():
 
 
 scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})
-scheduler.add_job(alert, "cron", minute=5)
+scheduler.add_job(alert, "cron", minute=1)
 scheduler.start()
