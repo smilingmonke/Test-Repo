@@ -13,9 +13,9 @@ import discord_info as di
 
 #!!! Determines if the signal conditions are met
 def mysig(x):
-    if x.ma20 < x.ma30 < x.ma60:
+    if x.ma10 < x.ma21 < x.ma101 < x.ma201:
         return -1
-    elif x.ma20 > x.ma30 > x.ma60:
+    elif x.ma10 > x.ma21 > x.ma101 > x.ma201:
         return 1
     else:
         return 0
@@ -49,9 +49,10 @@ def alert():
     df.columns = ["Local time", "Open", "High", "Low", "Close"]
 
     df["atr"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
-    df["ma20"] = ta.ema(df.Close, length=20)
-    df["ma30"] = ta.ema(df.Close, length=30)
-    df["ma60"] = ta.ema(df.Close, length=60)
+    df["ma10"] = ta.sma(df.Close, length=10)
+    df["ma20"] = ta.sma(df.Close, length=21)
+    df["ma101"] = ta.sma(df.Close, length=101)
+    df["ma201"] = ta.sma(df.Close, length=201)
 
     df["signal"] = df.apply(mysig, axis=1)
 
