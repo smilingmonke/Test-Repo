@@ -28,6 +28,11 @@ else:
         print(f"Failed to login to Account #{li.login_id}")
 
 
+def send_alert(msg):
+    payload = {"content": msg}
+    response = requests.post(di.URL, payload, headers=di.headers)
+
+
 def alert():
     symbol = "Volatility 75 Index"
     timeframe = mt.TIMEFRAME_M1
@@ -55,22 +60,18 @@ def alert():
     SLTPRatio = 1
 
     if df.iloc[-1]["signal"] == 1 and df.iloc[-2]["signal"] != 1:
-        sl = latest_close + latest_atr
-        tp = latest_close - (latest_atr * SLTPRatio)
-        msg = str(f"@{symbol}, SELL:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
-        print(msg)
-
-        payload = {"content": msg}
-        response = requests.post(di.URL, payload, headers=di.headers)
-
-    elif df.iloc[-1]["signal"] == -1 and df.iloc[-2]["signal"] != -1:
         sl = latest_close - latest_atr
         tp = latest_close + (latest_atr * SLTPRatio)
         msg = str(f"@{symbol}, BUY:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
+        send_alert(msg)
 
-        payload = {"content": msg}
-        response = requests.post(di.URL, payload, headers=di.headers)
+    elif df.iloc[-1]["signal"] == -1 and df.iloc[-2]["signal"] != -1:
+        sl = latest_close + latest_atr
+        tp = latest_close - (latest_atr * SLTPRatio)
+        msg = str(f"@{symbol}, SELL:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
+        print(msg)
+        send_alert(msg)
 
 
 # scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})
