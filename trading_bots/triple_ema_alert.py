@@ -59,16 +59,17 @@ def alert():
     latest_atr = df.atr.iloc[-1]
     SLTPRatio = 1
 
+    # 1 = BUY, -1 = SELL
     if df.iloc[-1]["signal"] == 1 and df.iloc[-2]["signal"] != 1:
-        sl = latest_close - latest_atr
-        tp = latest_close + (latest_atr * SLTPRatio)
+        sl = round(latest_close - latest_atr, 2)
+        tp = round(latest_close + (latest_atr * SLTPRatio), 2)
         msg = str(f"@{symbol}, BUY:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
         send_alert(msg)
 
     elif df.iloc[-1]["signal"] == -1 and df.iloc[-2]["signal"] != -1:
-        sl = latest_close + latest_atr
-        tp = latest_close - (latest_atr * SLTPRatio)
+        sl = round(latest_close + latest_atr, 2)
+        tp = round(latest_close - (latest_atr * SLTPRatio), 2)
         msg = str(f"@{symbol}, SELL:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
         send_alert(msg)
