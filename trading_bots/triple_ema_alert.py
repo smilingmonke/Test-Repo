@@ -1,4 +1,6 @@
+import time
 import pandas as pd
+import schedule
 import numpy as np
 from datetime import datetime, timedelta
 import pandas_ta as ta
@@ -71,6 +73,18 @@ def alert():
         response = requests.post(di.URL, payload, headers=di.headers)
 
 
-scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})
-scheduler.add_job(alert, "cron", minute=5)
-scheduler.start()
+# scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})
+# scheduler.add_job(alert, "cron", minute=5)
+# scheduler.start()
+
+
+# different scheduler
+
+schedule.every(1).minutes.do(alert)
+
+while True:
+    try:
+        schedule.run_pending()
+    except:
+        print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
+        time.sleep(60)
