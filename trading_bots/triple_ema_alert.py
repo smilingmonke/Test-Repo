@@ -5,13 +5,8 @@ import pandas_ta as ta
 from apscheduler.schedulers.blocking import BlockingScheduler
 import MetaTrader5 as mt
 import login_info as li
-import discord
-from discord.ext import commands
-import discord_bot_info as dbi
-
-BOT_TOKEN = dbi.TOKEN
-CHANNEL_ID = dbi.CHANNEL_ID
-bot = commands.Bot(command_prefix="$", intents=discord.Intents.all())
+import requests
+import discord_info as di
 
 
 #!!! Determines if the signal conditions are met
@@ -63,13 +58,8 @@ def alert():
         msg = str(f"@{symbol}, SELL:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
 
-        @bot.event
-        async def on_ready():
-
-            channel = bot.get_channel(CHANNEL_ID)
-            await channel.send(msg)
-
-        bot.run(BOT_TOKEN)
+        payload = {"content": msg}
+        response = requests.post(di.URL, payload, headers=di.headers)
 
     elif df.iloc[-1]["signal"] == -1 and df.iloc[-2]["signal"] != -1:
         sl = latest_close - latest_atr
@@ -77,13 +67,8 @@ def alert():
         msg = str(f"@{symbol}, BUY:{df.Close.iloc[-1]} SL:{sl}, TP:{tp}")
         print(msg)
 
-        @bot.event
-        async def on_ready():
-
-            channel = bot.get_channel(CHANNEL_ID)
-            await channel.send(msg)
-
-        bot.run(BOT_TOKEN)
+        payload = {"content": msg}
+        response = requests.post(di.URL, payload, headers=di.headers)
 
 
 scheduler = BlockingScheduler(job_defaults={"misfire_grace_time": 15 * 60})
