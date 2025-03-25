@@ -48,4 +48,4 @@ tzlocal==5.3.1
 urllib3==2.3.0
 wheel==0.45.1
 xyzservices==2025.1.0
-yarl==1.18.
+yarl==1.18
