@@ -259,7 +259,7 @@ def alert():
         send_alert(msg)
 
 
-schedule.every().hour.do(alert)
+schedule.every(1).hours.do(alert)
 
 while True:
     try:
