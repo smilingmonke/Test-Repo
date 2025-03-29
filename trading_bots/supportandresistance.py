@@ -5,27 +5,27 @@ import plotly.graph_objects as go
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
+df = pd.read_csv("C:\\Users\\mal\\code\\Test-Repo\\trading_bots\\v75_H_1_2019-2025.csv")
 
 
 def support(df1, l, n1, n2):
     for i in range(l - n1 + 1, l + 1):
-        if df1.low[i] > df1.low[i - 1]:
+        if df1.Low[i] > df1.Low[i - 1]:
             return 0
 
     for i in range(l + 1, l + n2 + 1):
-        if df1.low[i] < df1.low[i - 1]:
+        if df1.Low[i] < df1.Low[i - 1]:
             return 0
     return 1
 
 
 def resistance(df1, l, n1, n2):
     for i in range(l - n1 + 1, l + 1):
-        if df1.high[i] < df1.high[i - 1]:
+        if df1.High[i] < df1.High[i - 1]:
             return 0
 
     for i in range(l + 1, l + n2 + 1):
-        if df1.high[i] > df1.high[i - 1]:
+        if df1.High[i] > df1.High[i - 1]:
             return 0
 
     return 1
@@ -36,11 +36,12 @@ n2 = 2
 ss = []
 rr = []
 
-for row in range(n1, len(df) - n2):
+
+for row in range(900, 1100 - n2):
     if support(df, row, n1, n2):
-        ss.append((row, df.low[row]))
+        ss.append((row, df.Low[row]))
     if resistance(df, row, n1, n2):
-        rr.append((row, df.high[row]))
+        rr.append((row, df.High[row]))
 
 
 for i in range(0, len(ss) - 1):
@@ -57,29 +58,28 @@ for i in range(0, len(ss) - 1):
     for j in range(0, len(ss) - 1 - i):
         if j >= len(ss) - 1 - i:
             break
-        if abs(ss[j][1] - ss[j + 1][1]) <= 3e4:
+        if abs(ss[j][1] - ss[j + 1][1]) <= 1e3:
             del ss[j]
 
 for i in range(0, len(rr) - 1):
     for j in range(0, len(rr) - 1 - i):
         if j >= len(rr) - 1 - i:
             break
-        if abs(rr[j][1] - rr[j + 1][1]) <= 3e4:
+        if abs(rr[j][1] - rr[j + 1][1]) <= 1e3:
             del rr[j]
 
-
-s = 0
-e = len(df)
+s = 900
+e = 1100
 dfpl = df[s:e]
 
 fig = go.Figure(
     data=[
         go.Candlestick(
             x=dfpl.index,
-            open=dfpl["open"],
-            high=dfpl["high"],
-            low=dfpl["low"],
-            close=dfpl["close"],
+            open=dfpl["Open"],
+            high=dfpl["High"],
+            low=dfpl["Low"],
+            close=dfpl["Close"],
         )
     ]
 )
