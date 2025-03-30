@@ -238,7 +238,7 @@ def alert():
 
     df["signal"] = signal
     # print(df[df["signal"] == 1].count())
-    print(df.tail(20))
+    # print(df.tail(20))
 
     latest_close = df.Close.iloc[-1]
     latest_atr = df.atr.iloc[-1]
