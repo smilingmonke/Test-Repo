@@ -242,7 +242,7 @@ def alert():
 
     latest_close = df.Close.iloc[-1]
     latest_atr = df.atr.iloc[-1]
-    SLTPRatio = 1
+    SLTPRatio = 1.5
 
     if df.iloc[-1]["signal"] == 2:
         sl = round(latest_close - latest_atr, 2)

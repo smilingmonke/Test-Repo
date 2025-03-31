@@ -10,7 +10,7 @@ from backtesting import Strategy, Backtest
 df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
 
 # Adds the atr indicator to the df
-df["ATR"] = ta.atr(high=df.high, low=df.low, close=df.close, length=14)
+df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
 
 # Prints the last x amount of rows of the df
 # print(df.tail(20))
@@ -19,31 +19,31 @@ df["ATR"] = ta.atr(high=df.high, low=df.low, close=df.close, length=14)
 #!!! Support and Resistance functions
 def support(df1, l, n1, n2):
     for i in range(l - n1 + 1, l + 1):
-        if df1.low[i] > df1.low[i - 1]:
+        if df1.Low[i] > df1.Low[i - 1]:
             return 0
 
     for i in range(l + 1, l + n2 + 1):
-        if df1.low[i] < df1.low[i - 1]:
+        if df1.Low[i] < df1.Low[i - 1]:
             return 0
     return 1
 
 
 def resistance(df1, l, n1, n2):
     for i in range(l - n1 + 1, l + 1):
-        if df1.high[i] < df1.high[i - 1]:
+        if df1.High[i] < df1.High[i - 1]:
             return 0
 
     for i in range(l + 1, l + n2 + 1):
-        if df1.high[i] > df1.high[i - 1]:
+        if df1.High[i] > df1.High[i - 1]:
             return 0
     return 1
 
 
 length = len(df)
-open = list(df["open"])
-high = list(df["high"])
-low = list(df["low"])
-close = list(df["close"])
+Open = list(df["Open"])
+High = list(df["High"])
+Low = list(df["Low"])
+Close = list(df["Close"])
 bodydiff = [0] * length
 highdiff = [0] * length
 lowdiff = [0] * length
@@ -54,7 +54,7 @@ ratio2 = [0] * length
 def isEngulfing(l):
 
     row = l
-    bodydiff[row] = abs(open[row] - close[row])
+    bodydiff[row] = abs(Open[row] - Close[row])
     if bodydiff[row] < 100:
         bodydiff[row] = 100
 
@@ -62,19 +62,19 @@ def isEngulfing(l):
     if (
         bodydiff[row] > bodydiffmin
         and bodydiff[row - 1] > bodydiffmin
-        and open[row - 1] < close[row - 1]
-        and open[row] > close[row]
-        and (open[row] - close[row]) >= -1e-2
-        and close[row] < open[row - 1]
+        and Open[row - 1] < Close[row - 1]
+        and Open[row] > Close[row]
+        and (Open[row] - Close[row]) >= -1e-2
+        and Close[row] < Open[row - 1]
     ):
         return 1
     elif (
         bodydiff[row] > bodydiffmin
         and bodydiff[row - 1] > bodydiffmin
-        and open[row - 1] > close[row - 1]
-        and open[row] < close[row]
-        and (open[row] - close[row]) <= +1e-2
-        and close[row] > open[row - 1]
+        and Open[row - 1] > Close[row - 1]
+        and Open[row] < Close[row]
+        and (Open[row] - Close[row]) <= +1e-2
+        and Close[row] > Open[row - 1]
     ):
         return 2
     else:
@@ -84,9 +84,9 @@ def isEngulfing(l):
 def isStar(l):
     bodydiffmin = 100
     row = l
-    highdiff[row] = high[row] - max(open[row], close[row])
-    lowdiff[row] = min(open[row], close[row]) - low[row]
-    bodydiff[row] = abs(open[row] - close[row])
+    highdiff[row] = High[row] - max(Open[row], Close[row])
+    lowdiff[row] = min(Open[row], Close[row]) - Low[row]
+    bodydiff[row] = abs(Open[row] - Close[row])
     if bodydiff[row] < 100:
         bodydiff[row] = 100
     ratio1[row] = highdiff[row] / bodydiff[row]
@@ -112,16 +112,16 @@ def closeResistance(l, levels, lim):
     if len(levels) == 0:
         return 0
 
-    c1 = abs(df.high[l] - min(levels, key=lambda x: abs(x - df.high[l]))) <= lim
+    c1 = abs(df.High[l] - min(levels, key=lambda x: abs(x - df.High[l]))) <= lim
     c2 = (
         abs(
-            max(df.open[l], df.close[l])
-            - min(levels, key=lambda x: abs(x - df.high[l]))
+            max(df.Open[l], df.Close[l])
+            - min(levels, key=lambda x: abs(x - df.High[l]))
         )
         <= lim
     )
-    c3 = min(df.open[l], df.close[l]) < min(levels, key=lambda x: abs(x - df.high[l]))
-    c4 = df.low[l] < min(levels, key=lambda x: abs(x - df.high[l]))
+    c3 = min(df.Open[l], df.Close[l]) < min(levels, key=lambda x: abs(x - df.High[l]))
+    c4 = df.Low[l] < min(levels, key=lambda x: abs(x - df.High[l]))
 
     if c1 or c2 and c3 and c4:
         return 1
@@ -133,15 +133,15 @@ def closeSupport(l, levels, lim):
     if len(levels) == 0:
         return 0
 
-    c1 = abs(df.low[l] - min(levels, key=lambda x: abs(x - df.low[l]))) <= lim
+    c1 = abs(df.Low[l] - min(levels, key=lambda x: abs(x - df.Low[l]))) <= lim
     c2 = (
         abs(
-            max(df.open[l], df.close[l]) - min(levels, key=lambda x: abs(x - df.low[l]))
+            max(df.Open[l], df.Close[l]) - min(levels, key=lambda x: abs(x - df.Low[l]))
         )
         <= lim
     )
-    c3 = min(df.open[l], df.close[l]) > min(levels, key=lambda x: abs(x - df.low[l]))
-    c4 = df.high[l] > min(levels, key=lambda x: abs(x - df.low[l]))
+    c3 = min(df.Open[l], df.Close[l]) > min(levels, key=lambda x: abs(x - df.Low[l]))
+    c4 = df.High[l] > min(levels, key=lambda x: abs(x - df.Low[l]))
 
     if c1 or c2 and c3 and c4:
         return 1
@@ -160,9 +160,9 @@ for row in range(backCandles, len(df) - n2):
 
     for subrow in range(row - backCandles + n1, row + 1):
         if support(df, subrow, n1, n2):
-            ss.append(df.low[subrow])
+            ss.append(df.Low[subrow])
         if resistance(df, subrow, n1, n2):
-            rr.append(df.high[subrow])
+            rr.append(df.High[subrow])
 
     if (isEngulfing(row) == 1 or isStar(row) == 1) and closeResistance(row, rr, 3e3):
         signal[row] = 1
@@ -205,24 +205,25 @@ def ATR():
 
 
 #!!!!!!! atr sl and tp return %1158
-# class MyCandlesStrat(Strategy):
-#     atr_f = 1
-#     ratio_f = 2
+class ATRFixed(Strategy):
+    atr_f = 1
+    ratio_f = 1.5
 
-#     def init(self):
-#         super().init()
-#         self.signal1 = self.I(SIGNAL)
-#         self.atr1 = self.I(ATR)
-#     def next(self):
-#         super().next()
-#         if self.signal1 == 2:
-#             sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
-#             tp1 = self.data.Close[-1] + self.data.ATR[-1] * self.ratio_f / self.atr_f
-#             self.buy(sl=sl1, tp=tp1)
-#         elif self.signal1 == 1:
-#             sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
-#             tp1 = self.data.Close[-1] - self.data.ATR[-1] * self.ratio_f / self.atr_f
-#             self.sell(sl=sl1, tp=tp1)
+    def init(self):
+        super().init()
+        self.signal1 = self.I(SIGNAL)
+        self.atr1 = self.I(ATR)
+
+    def next(self):
+        super().next()
+        if self.signal1 == 2:
+            sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
+            tp1 = self.data.Close[-1] + self.data.ATR[-1] * self.ratio_f / self.atr_f
+            self.buy(sl=sl1, tp=tp1)
+        elif self.signal1 == 1:
+            sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
+            tp1 = self.data.Close[-1] - self.data.ATR[-1] * self.ratio_f / self.atr_f
+            self.sell(sl=sl1, tp=tp1)
 
 
 #!!!!!!! fixed sl and tp with trailing stop return %439 w/ no limit on trades %388 w/ limit on number of trades
@@ -280,7 +281,7 @@ class MyCandlesStrat(Strategy):
             self.sell(sl=sl1)
 
 
-bt = Backtest(df, MyCandlesStrat, cash=100_000_000, commission=0.0, margin=1)
+bt = Backtest(df, ATRFixed, cash=100_000_000, commission=0.0, margin=1)
 stats = bt.run()
 print(stats)
 # print(df)

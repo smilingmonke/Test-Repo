@@ -7,22 +7,22 @@ import matplotlib.pyplot as plt
 from backtesting import Strategy, Backtest
 
 
-df = pd.read_csv("trading_bots\\v75_D_1_2019-2025.csv")
+df = pd.read_csv("trading_bots\\v75_H_1_2019-2025.csv")
 
 ma_length = 101
 
-df["atr"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
-df["ma"] = ta.sma(df.Close, length=ma_length)
+df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
+df["SMA"] = ta.sma(df.Close, length=ma_length)
 
 
-#!!! Determines if candles are above or below the MA's curve
+#!!! Determines if candles are above or below the SMA's curve
 def MAsig(df1, l, backcandles):
     sigup = 2
     sigdn = 1
     for i in range(l - backcandles, l + 1):
-        if df1.Low[i] <= df1.ma[i]:
+        if df1.Low[i] <= df1.SMA[i]:
             sigup = 0
-        if df1.High[i] >= df1.ma[i]:
+        if df1.High[i] >= df1.SMA[i]:
             sigdn = 0
 
     if sigup:
@@ -33,7 +33,7 @@ def MAsig(df1, l, backcandles):
         return 0
 
 
-# Plots chart with MA
+# Plots chart with SMA
 # dfpl = df[120:300]
 # fig = go.Figure(
 #     data=[
@@ -45,7 +45,7 @@ def MAsig(df1, l, backcandles):
 #             close=dfpl["Close"],
 #         ),
 #         go.Scatter(
-#             x=dfpl.index, y=dfpl.ma, line=dict(color="DarkBlue", width=1), name="MA"
+#             x=dfpl.index, y=dfpl.SMA, line=dict(color="DarkBlue", width=1), name="SMA"
 #         ),
 #     ]
 # )
@@ -61,13 +61,13 @@ for row in range(MAbackcandles, len(df)):
 df["MAsignal"] = MAsignal
 # print(df[122:150])
 
-HLbc = 9
+HLBackCandles = 9
 
-df["mins"] = df["Low"].rolling(window=HLbc).min()
-df["maxs"] = df["High"].rolling(window=HLbc).max()
+df["mins"] = df["Low"].rolling(window=HLBackCandles).min()
+df["maxs"] = df["High"].rolling(window=HLBackCandles).max()
 
 
-def HLsig(x):
+def HLSignal(x):
     if x.MAsignal == 1 and x.High >= x.maxs:
         return 1
     if x.MAsignal == 2 and x.Low <= x.mins:
@@ -76,15 +76,15 @@ def HLsig(x):
         return 0
 
 
-df["HLsig"] = df.apply(HLsig, axis=1)
+df["HLSignal"] = df.apply(HLSignal, axis=1)
 
-# print(df[df["HLsig"] == 2].count())
+# print(df[df["HLSignal"] == 2].count())
 
 
 def pointpos(x):
-    if x["HLsig"] == 1:
+    if x["HLSignal"] == 1:
         return x["High"] + 1e3
-    elif x["HLsig"] == 2:
+    elif x["HLSignal"] == 2:
         return x["Low"] - 1e3
     else:
         return np.nan
@@ -92,7 +92,7 @@ def pointpos(x):
 
 df["pointpos"] = df.apply(lambda row: pointpos(row), axis=1)
 
-# Plots chart with MA and points
+# Plots chart with SMA and points
 dfpl = df[444:950]
 fig = go.Figure(
     data=[
@@ -104,7 +104,7 @@ fig = go.Figure(
             close=dfpl["Close"],
         ),
         go.Scatter(
-            x=dfpl.index, y=dfpl.ma, line=dict(color="DarkBlue", width=1), name="MA"
+            x=dfpl.index, y=dfpl.SMA, line=dict(color="DarkBlue", width=1), name="SMA"
         ),
     ]
 )
@@ -115,4 +115,68 @@ fig.add_scatter(
     marker=dict(color="purple", size=6),
     name="Sig",
 )
-fig.show()
+# fig.show()
+
+
+def SIGNAL():
+    return df.HLSignal
+
+
+# ATR Trailing SL
+
+
+# class MyStrat(Strategy):
+#     atr_f = 1.0
+
+#     def init(self):
+#         super().init()
+#         self.signal1 = self.I(SIGNAL)
+
+#     def next(self):
+#         super().next()
+#         for trade in self.trades:
+#             if trade.is_long:
+#                 trade.sl = max(
+#                     trade.sl or -np.inf,
+#                     self.data.Close[-1] - self.data.ATR[-1] / self.atr_f,
+#                 )
+#             else:
+#                 trade.sl = min(
+#                     trade.sl or np.inf,
+#                     self.data.Close[-1] + self.data.ATR[-1] / self.atr_f,
+#                 )
+
+#         if self.signal1 == 2 and len(self.trades) <= 0:  # trades number change!
+#             sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
+#             self.buy(sl=sl1)
+#         elif self.signal1 == 1 and len(self.trades) <= 0:  # trades number change!
+#             sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
+#             self.sell(sl=sl1)
+
+
+# ATR Fixed SL & TP
+class MyStrat(Strategy):
+    atr_f = 1.0
+    TPSLR = 2.0
+
+    def init(self):
+        super().init()
+        self.signal1 = self.I(SIGNAL)
+
+    def next(self):
+        super().next()
+
+        if self.signal1 == 2:
+            sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
+            tp1 = self.data.Close[-1] + self.data.ATR[-1] * self.TPSLR / self.atr_f
+            self.buy(sl=sl1, tp=tp1)
+        elif self.signal1 == 1:
+            sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
+            tp1 = self.data.Close[-1] - self.data.ATR[-1] * self.TPSLR / self.atr_f
+            self.sell(sl=sl1, tp=tp1)
+
+
+bt = Backtest(df, MyStrat, cash=10_000_000_000, commission=0.0, margin=0.1)
+stats = bt.run()
+print(stats)
+bt.plot()
