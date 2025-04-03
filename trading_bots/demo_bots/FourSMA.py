@@ -117,7 +117,7 @@ def bot():
     print(f"\nExited {exits} trades\n")
 
 
-schedule.every(1).minutes.do(bot)
+schedule.every(1).seconds.do(bot)
 
 while True:
     try:
