@@ -75,13 +75,14 @@ def bot():
     df["MA100"] = ta.sma(close=df.Close, length=100)
     df["MA200"] = ta.sma(close=df.Close, length=200)
     # print(df.tail())
-    uf.KillSwitch(SYMBOL)
+
     uf.LossPause(1000)
 
     atr_price = df["ATR"].iloc[-1]
     signal = smaSignal(df=df)
-
-    if mt.positions_total() < 1:
+    if mt.positions_total() > 1:
+        uf.KillSwitch(SYMBOL)
+    elif mt.positions_total() < 1:
 
         deviation = 10
 
