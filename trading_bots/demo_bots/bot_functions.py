@@ -29,7 +29,8 @@ def symbol_selector():
 FUNCTIONS TO MAKE :>>
 1) Kill switch - exits every open trade and pending order ✅
 2) Trade Pauser - determines if the bot has lot x% in x number of trades and pauses the bot for an x period of time ✅
-3)  
+3) Overtime - exits if trade exceed time limit
+3) ATRClose - exits if price reaches the previous close plus ATR
 """
 
 
@@ -140,6 +141,7 @@ def KillSwitch(symbol):
     print("\n...Turning off KillSwitch...\n")
 
 
+# Creates a trade
 def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
 
     order = {
@@ -156,3 +158,27 @@ def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
     r = mt.order_send(order)
 
     return r
+
+
+# Exits if price reaches the previous close plus ATR
+def ATRClose(symbol, atr_price):
+
+    exits = 0
+    price = mt.symbol_info_tick(symbol).ask
+    positions = mt.positions_get()
+
+    if len(positions) > 0:
+        for pos in positions:
+            entry = pos.price_open
+            if pos.type == mt.ORDER_TYPE_BUY:
+                if entry - atr_price < price or entry + atr_price > price:
+                    KillSwitch(symbol)
+                    exits += 1
+            elif pos.type == mt.ORDER_TYPE_SELL:
+                if entry + atr_price > price or entry - atr_price < price:
+                    KillSwitch(symbol)
+                    exits += 1
+    else:
+        print("No open positions")
+
+    return exits

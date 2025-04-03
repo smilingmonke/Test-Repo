@@ -17,6 +17,9 @@ RISKREWARD = 1.5
 LOTS = 0.001
 
 
+exits = 0
+
+
 # Checks the validity of the signal
 def smaSignal(df):
     try:
@@ -74,10 +77,11 @@ def bot():
     df["MA20"] = ta.sma(close=df.Close, length=20)
     df["MA100"] = ta.sma(close=df.Close, length=100)
     df["MA200"] = ta.sma(close=df.Close, length=200)
-    print(df.tail())
+    # print(df.tail())
     uf.KillSwitch(SYMBOL)
     uf.LossPause(1000)
 
+    atr_price = df["ATR"].iloc[-1]
     signal = smaSignal(df=df)
 
     if mt.positions_total() < 1:
@@ -85,22 +89,24 @@ def bot():
         deviation = 10
 
         if signal == 1:
-            sl = df["MA200"].iloc[-1] - df["ATR"].iloc[-1]
-            tp = df["Close"].iloc[-1] + (df["ATR"].iloc[-1] * RISKREWARD)
-            r = uf.CreateTrade(
-                SYMBOL, LOTS, price, sl, tp, mt.ORDER_TYPE_BUY, deviation
-            )
+            sl = df["MA200"].iloc[-1] - atr_price
+            tp = df["Close"].iloc[-1] + (atr_price * RISKREWARD)
+            # r = uf.CreateTrade(
+            #     SYMBOL, LOTS, price, sl, tp, mt.ORDER_TYPE_BUY, deviation
+            # )
+            r = mt.Buy(SYMBOL, LOTS)
             print(f"B-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
             if r.retcode == mt.TRADE_RETCODE_DONE:
                 msg = f"FOR V75 -> BUY @{price}, SL = {sl}, TP = {tp}"
                 send_alert(msg)
         elif signal == -1:
-            sl = df["MA200"].iloc[-1] + df["ATR"].iloc[-1]
-            tp = df["Close"].iloc[-1] - (df["ATR"].iloc[-1] * RISKREWARD)
-            r = uf.CreateTrade(
-                SYMBOL, LOTS, price, sl, tp, mt.ORDER_TYPE_SELL, deviation
-            )
+            sl = df["MA200"].iloc[-1] + atr_price
+            tp = df["Close"].iloc[-1] - (atr_price * RISKREWARD)
+            # r = uf.CreateTrade(
+            #     SYMBOL, LOTS, price, sl, tp, mt.ORDER_TYPE_SELL, deviation
+            # )
+            r = mt.Sell(SYMBOL, LOTS)
             print(f"S-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
             if r.retcode == mt.TRADE_RETCODE_DONE:
@@ -108,6 +114,10 @@ def bot():
                 send_alert(msg)
         else:
             print("No trades available....")
+    else:
+        exits += uf.ATRClose(SYMBOL, atr_price)
+
+    print(f"Exited {exits} trades")
 
 
 schedule.every(1).minutes.do(bot)

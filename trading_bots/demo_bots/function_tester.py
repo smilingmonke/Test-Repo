@@ -5,7 +5,7 @@ import time
 import pandas as pd
 import schedule
 import bot_functions as uf
-
+import pandas_ta as ta
 
 if not mt.initialize():
     print(f"failed to initialize {mt.last_error()}")
@@ -26,5 +26,9 @@ df = pd.DataFrame(data)
 df["time"] = pd.to_datetime(df["time"], unit="s")
 df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
 df.columns = ["Local time", "Open", "High", "Low", "Close"]
+df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
+atr_price = df.ATR.iloc[-1]
 
-uf.KillSwitch(symbol)
+exits = 0
+exits += uf.ATRClose(symbol, atr_price)
+print(f"exited {exits} trades")
