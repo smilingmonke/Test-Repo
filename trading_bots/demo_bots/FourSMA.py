@@ -17,9 +17,6 @@ RISKREWARD = 1.5
 LOTS = 0.001
 
 
-exits = 0
-
-
 # Checks the validity of the signal
 def smaSignal(df):
     try:
@@ -52,7 +49,7 @@ def send_alert(msg):
 def bot():
 
     signal = 0
-
+    exits = 0
     if not mt.initialize():
         print(f"failed to initialize {mt.last_error()}")
     else:
@@ -117,7 +114,7 @@ def bot():
     else:
         exits += uf.ATRClose(SYMBOL, atr_price)
 
-    print(f"Exited {exits} trades")
+    print(f"\nExited {exits} trades\n")
 
 
 schedule.every(1).minutes.do(bot)
