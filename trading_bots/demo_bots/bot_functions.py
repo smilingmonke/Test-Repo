@@ -27,7 +27,7 @@ def symbol_selector():
 
 """
 FUNCTIONS TO MAKE :>>
-1) Kill switch - exits every open trade and pending order
+1) Kill switch - exits every open trade and pending order ✅
 2) Trade Pauser - determines if the bot has lot x% in x number of trades and pauses the bot for an x period of time ✅
 3)  
 """
@@ -88,13 +88,16 @@ def LossPause(max_loss):
 
         trade_losses = abs(trade_losses)
         if trade_losses > max_loss:
-            print(f"\n😴...Sleeping cuz losses have exceeded {max_loss}...😴")
+            print(f"\n😴...Sleeping cuz losses have exceeded {max_loss}...😴\n")
             time.sleep(3600)
         else:
-            print(f"\nContinuing to trade until losses exceed {max_loss}")
+            print(f"\nContinuing to trade until losses exceed {max_loss}\n")
 
 
+# Exits every open position and pending order
 def KillSwitch(symbol):
+
+    print(" ")
 
     for i in range(3, 0, -1):
         print(f"{i}...")
@@ -135,3 +138,21 @@ def KillSwitch(symbol):
         print("\nNO ACTIVE ORDERS OR POSITIONS TURNING OFF KILL SWITCH...")
 
     print("\n...Turning off KillSwitch...\n")
+
+
+def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
+
+    order = {
+        "action": mt.TRADE_ACTION_DEAL,
+        "symbol": symbol,
+        "volume": volume,
+        "price": price,
+        "sl": sl,
+        "tp": tp,
+        "order_type": order_type,
+        "deviation": deviation,
+    }
+
+    r = mt.order_send(order)
+
+    return r
