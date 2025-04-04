@@ -48,6 +48,8 @@ def send_alert(msg):
 
 def bot():
 
+    print("\n🤖Running SMA bot...🤖\n")
+
     signal = 0
     exits = 0
 
@@ -120,12 +122,12 @@ def bot():
     # print(df.tail(20))
 
 
-bot()
-# schedule.every(1).minutes.do(bot)
+# bot()
+schedule.every(1).minutes.do(bot)
 
-# while True:
-#     try:
-#         schedule.run_pending()
-#     except:
-#         print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
-#         time.sleep(60)
+while True:
+    try:
+        schedule.run_pending()
+    except:
+        print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
+        time.sleep(60)
