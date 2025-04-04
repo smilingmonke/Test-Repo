@@ -117,7 +117,7 @@ def bot():
     if exits > 0:
         print(f"Exited {exits} trades")
         uf.LossPause(1000)
-    print(df.tail(20))
+    # print(df.tail(20))
 
 
 bot()
