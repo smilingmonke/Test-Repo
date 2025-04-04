@@ -14,7 +14,7 @@ SYMBOL = "Volatility 75 Index"
 
 ATR_F = 15
 RISKREWARD = 1.5
-LOTS = 0.001
+LOTS = 0.01
 
 
 # Checks the validity of the signal
@@ -50,15 +50,16 @@ def bot():
 
     signal = 0
     exits = 0
+
     if not mt.initialize():
         print(f"failed to initialize {mt.last_error()}")
     else:
         if not mt.login(login=li.login_id, password=li.password, server=li.server):
             print(f"Failed to login to Account #{li.login_id}")
 
-    timeframe = mt.TIMEFRAME_M1
+    timeframe = mt.TIMEFRAME_H1
     now = datetime.now()
-    date_from = now - timedelta(days=3)
+    date_from = now - timedelta(days=21)
 
     price = mt.symbol_info_tick(SYMBOL).ask
 
@@ -74,55 +75,57 @@ def bot():
     df["MA20"] = ta.sma(close=df.Close, length=20)
     df["MA100"] = ta.sma(close=df.Close, length=100)
     df["MA200"] = ta.sma(close=df.Close, length=200)
+    df["ATRMean"] = df["ATR"].rolling(12).mean()
     # print(df.tail())
-
-    uf.LossPause(1000)
 
     atr_price = df["ATR"].iloc[-1]
     signal = smaSignal(df=df)
-    if mt.positions_total() > 1:
+    if mt.positions_total() >= 1:
         uf.KillSwitch(SYMBOL)
+
     elif mt.positions_total() < 1:
 
         deviation = 10
+        if atr_price > df["ATRMean"].iloc[-1]:
+            if signal == 1:
+                sl = df["Close"].iloc[-1] - atr_price
+                tp = df["Close"].iloc[-1] + (atr_price * RISKREWARD)
 
-        if signal == 1:
-            sl = df["MA200"].iloc[-1] - atr_price
-            tp = df["Close"].iloc[-1] + (atr_price * RISKREWARD)
-            # r = uf.CreateTrade(
-            #     SYMBOL, LOTS, price, sl, tp, mt.ORDER_TYPE_BUY, deviation
-            # )
-            r = mt.Buy(SYMBOL, LOTS)
-            print(f"B-price: {price}, sl{sl}, tp{tp}")
-            print(r.comment)
-            if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"FOR V75 -> BUY @{price}, SL = {sl}, TP = {tp}"
-                send_alert(msg)
-        elif signal == -1:
-            sl = df["MA200"].iloc[-1] + atr_price
-            tp = df["Close"].iloc[-1] - (atr_price * RISKREWARD)
-            # r = uf.CreateTrade(
-            #     SYMBOL, LOTS, price, sl, tp, mt.ORDER_TYPE_SELL, deviation
-            # )
-            r = mt.Sell(SYMBOL, LOTS)
-            print(f"S-price: {price}, sl{sl}, tp{tp}")
-            print(r.comment)
-            if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"FOR V75 -> SELL @{price}, SL = {sl}, TP = {tp}"
-                send_alert(msg)
+                r = mt.Buy(SYMBOL, LOTS)
+                print(f"B-price: {price}, sl{sl}, tp{tp}")
+                print(r.comment)
+                if r.retcode == mt.TRADE_RETCODE_DONE:
+                    msg = f"V75 -> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
+                    send_alert(msg)
+            elif signal == -1:
+                sl = df["Close"].iloc[-1] + atr_price
+                tp = df["Close"].iloc[-1] - (atr_price * RISKREWARD)
+
+                r = mt.Sell(SYMBOL, LOTS)
+                print(f"S-price: {price}, sl{sl}, tp{tp}")
+                print(r.comment)
+                if r.retcode == mt.TRADE_RETCODE_DONE:
+                    msg = f"V75 -> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
+                    send_alert(msg)
+            else:
+                print("No trades available....🥲")
         else:
-            print("No trades available....")
+            print("ATR is less than average...🥲")
     else:
         exits += uf.ATRClose(SYMBOL, atr_price)
 
-    print(f"\nExited {exits} trades\n")
+    if exits > 0:
+        print(f"Exited {exits} trades")
+        uf.LossPause(1000)
+    print(df.tail(20))
 
 
-schedule.every(1).seconds.do(bot)
+bot()
+# schedule.every(1).minutes.do(bot)
 
-while True:
-    try:
-        schedule.run_pending()
-    except:
-        print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
-        time.sleep(60)
+# while True:
+#     try:
+#         schedule.run_pending()
+#     except:
+#         print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
+#         time.sleep(60)
