@@ -140,6 +140,8 @@ def KillSwitch(symbol):
 
     print("\n...Turning off KillSwitch...\n")
 
+    return trades_closed
+
 
 # Creates a trade
 def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
@@ -163,22 +165,56 @@ def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
 # Exits if price reaches the previous close plus ATR
 def ATRClose(symbol, atr_price):
 
+    print("\n🔍Checking if its time to exit...🔍\n")
+
+    in_pos = False
+    atr_factor = 1
+    atr_price *= atr_factor
     exits = 0
     price = mt.symbol_info_tick(symbol).ask
     positions = mt.positions_get()
 
     if len(positions) > 0:
-        for pos in positions:
-            entry = pos.price_open
-            if pos.type == mt.ORDER_TYPE_BUY:
-                if entry - atr_price < price or entry + atr_price > price:
-                    KillSwitch(symbol)
-                    exits += 1
-            elif pos.type == mt.ORDER_TYPE_SELL:
-                if entry + atr_price > price or entry - atr_price < price:
-                    KillSwitch(symbol)
-                    exits += 1
-    else:
-        print("No open positions")
+        in_pos = True
+        while in_pos:
+            for pos in positions:
+                entry = pos.price_open
 
+                buysl = round(entry - atr_price, 2)
+                buytp = round(entry + atr_price, 2)
+                sellsl = round(entry + atr_price, 2)
+                selltp = round(entry - atr_price, 2)
+
+                if pos.type == mt.ORDER_TYPE_BUY:
+                    print(
+                        f"[ Entry: {pos.price_open} | Current: {pos.price_current} | SL: {buysl} | TP: {buytp} | Profit: {pos.profit:.2} ]"
+                    )
+                    time.sleep(3)
+                    if price < buysl:
+                        print("🔴Hit SL exiting buy...")
+                        exits += KillSwitch(symbol)
+                        in_pos = False
+                        break
+                    elif price > buytp:
+                        print("🟢Hit TP exiting buy...")
+                        exits += KillSwitch(symbol)
+                        in_pos = False
+                        break
+                elif pos.type == mt.ORDER_TYPE_SELL:
+                    print(
+                        f"[ Entry = {pos.price_open} | Current: {pos.price_current} | SL: {sellsl} | TP: {selltp} | Profit: {pos.profit} ]"
+                    )
+                    time.sleep(3)
+                    if price > sellsl:
+                        print("🔴Hit SL exiting sell...")
+                        exits += KillSwitch(symbol)
+                        in_pos = False
+                        break
+                    elif price < selltp:
+                        print("🟢Hit TP exiting sell...")
+                        exits += KillSwitch(symbol)
+                        in_pos = False
+                        break
+    else:
+        print(f"Open positions = {len(positions)}")
     return exits
