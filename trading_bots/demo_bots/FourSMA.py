@@ -1,3 +1,4 @@
+import os
 import requests
 import MetaTrader5 as mt
 import login_info as li
@@ -140,6 +141,7 @@ def run():
             bot(signal)
 
         else:
+            os.system("cls" if os.name == "nt" else "clear")
             print("❌NO SIGNAL❌")
             time.sleep(30)
 
