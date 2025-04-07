@@ -18,41 +18,10 @@ RISKREWARD = 1.5
 LOTS = 0.01
 
 
-# Retrieves price info and ask price then puts it into a dataframe
-def getData():
-    if not mt.initialize():
-        print(f"failed to initialize {mt.last_error()}")
-    else:
-        if not mt.login(login=li.login_id, password=li.password, server=li.server):
-            print(f"Failed to login to Account #{li.login_id}")
-
-    timeframe = mt.TIMEFRAME_H1
-    now = datetime.now()
-    date_from = now - timedelta(days=21)
-
-    ask = mt.symbol_info_tick(SYMBOL).ask
-
-    data = mt.copy_rates_range(SYMBOL, timeframe, date_from, now)
-    df = pd.DataFrame(data)
-    df["time"] = pd.to_datetime(df["time"], unit="s")
-    df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
-    df.columns = ["Local time", "Open", "High", "Low", "Close"]
-
-    # Indicators
-    df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
-    df["MA10"] = ta.sma(close=df.Close, length=10)
-    df["MA20"] = ta.sma(close=df.Close, length=20)
-    df["MA100"] = ta.sma(close=df.Close, length=100)
-    df["MA200"] = ta.sma(close=df.Close, length=200)
-    # df["ATRMean"] = df["ATR"].rolling(12).mean()
-
-    return df, ask
-
-
 # Checks the validity of the signal
 def smaSignal():
 
-    df = getData()[0]
+    df = uf.getData()[0]
 
     try:
         if (
@@ -88,8 +57,8 @@ def bot(signal):
 
     exits = 0
     msg = ""
-    df = getData()[0]
-    price = getData()[1]
+    df = uf.getData()[0]
+    price = uf.getData()[1]
     atr_price = df["ATR"].iloc[-1]
     total_positions = 2
 
@@ -121,9 +90,10 @@ def bot(signal):
             if r.retcode == mt.TRADE_RETCODE_DONE:
                 msg = f"V75 (H1)-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
 
-    send_alert(msg)
+    # send_alert(msg)
 
     print(df.tail(1))
+    time.sleep(3)
 
     exits += uf.ATRClose(SYMBOL, atr_price)
 

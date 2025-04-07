@@ -1,8 +1,10 @@
 import time
 import os
 import pandas as pd
+import pandas_ta as ta
 import MetaTrader5 as mt
 from datetime import datetime, timedelta
+import login_info as li
 
 
 # returns selected symbol
@@ -171,13 +173,14 @@ def ATRClose(symbol, atr_price):
     atr_factor = 1
     atr_price *= atr_factor
     exits = 0
-    price = mt.symbol_info_tick(symbol).ask
+
     positions = mt.positions_get()
     positions_df = pd.DataFrame(list(positions), columns=positions[0]._asdict().keys())
 
     if len(positions) > 0:
         in_pos = True
         while in_pos:
+            price = mt.symbol_info_tick(symbol).ask
             positions = mt.positions_get()
             os.system("cls" if os.name == "nt" else "clear")
             print("\n🔍Checking if its time to exit...🔍\n")
@@ -191,7 +194,7 @@ def ATRClose(symbol, atr_price):
                 print(
                     f"<\ Trade #: {i} | {trade_type} | Lots: {pos.volume} | Profit: {pos.profit:.2} \>"
                 )
-
+                time.sleep(3)
                 entry = pos.price_open
 
                 buysl = round(entry - atr_price, 2)
@@ -200,7 +203,7 @@ def ATRClose(symbol, atr_price):
                 selltp = round(entry - atr_price, 2)
 
                 if pos.type == mt.ORDER_TYPE_BUY:
-                    time.sleep(3)
+
                     if price < buysl:
                         print("🔴Hit SL exiting buy...")
                         exits += KillSwitch(symbol)
@@ -212,7 +215,6 @@ def ATRClose(symbol, atr_price):
                         in_pos = False
                         break
                 elif pos.type == mt.ORDER_TYPE_SELL:
-                    time.sleep(3)
                     if price > sellsl:
                         print("🔴Hit SL exiting sell...")
                         exits += KillSwitch(symbol)
@@ -230,3 +232,47 @@ def ATRClose(symbol, atr_price):
         print(f"Open positions = {len(positions)}")
 
     return exits
+
+
+# Retrieves price info and ask price then puts it into a dataframe
+def getData(symbol, timeframe):
+
+    timeframes = {
+        "one_minute": mt.TIMEFRAME_M1,
+        "five_minute": mt.TIMEFRAME_M5,
+        "fifteen_minute": mt.TIMEFRAME_M15,
+        "thirty_minute": mt.TIMEFRAME_M30,
+        "hourly": mt.TIMEFRAME_H1,
+        "four_hour": mt.TIMEFRAME_H4,
+        "daily": mt.TIMEFRAME_D1,
+        "weekly": mt.TIMEFRAME_W1,
+        "monthly": mt.TIMEFRAME_MN1,
+    }
+
+    if not mt.initialize():
+        print(f"failed to initialize {mt.last_error()}")
+    else:
+        if not mt.login(login=li.login_id, password=li.password, server=li.server):
+            print(f"Failed to login to Account #{li.login_id}")
+
+    timeframe = mt.TIMEFRAME_H1
+    now = datetime.now()
+    date_from = now - timedelta(days=21)
+
+    ask = mt.symbol_info_tick(symbol).ask
+
+    data = mt.copy_rates_range(symbol, timeframe, date_from, now)
+    df = pd.DataFrame(data)
+    df["time"] = pd.to_datetime(df["time"], unit="s")
+    df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
+    df.columns = ["Local time", "Open", "High", "Low", "Close"]
+
+    # Indicators
+    df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
+    df["MA10"] = ta.sma(close=df.Close, length=10)
+    df["MA20"] = ta.sma(close=df.Close, length=20)
+    df["MA100"] = ta.sma(close=df.Close, length=100)
+    df["MA200"] = ta.sma(close=df.Close, length=200)
+    # df["ATRMean"] = df["ATR"].rolling(12).mean()
+
+    return df, ask
