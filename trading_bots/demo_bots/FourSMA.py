@@ -70,7 +70,7 @@ def smaSignal():
         ):
             return 1
         else:
-            return 1
+            return 0
     except:
         print("Not enough data...")
 
