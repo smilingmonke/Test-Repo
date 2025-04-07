@@ -173,11 +173,14 @@ def ATRClose(symbol, atr_price):
     exits = 0
     price = mt.symbol_info_tick(symbol).ask
     positions = mt.positions_get()
+    positions_df = pd.DataFrame(list(positions), columns=positions[0]._asdict().keys())
 
     if len(positions) > 0:
         in_pos = True
         while in_pos:
+            i = 1
             for pos in positions:
+
                 entry = pos.price_open
 
                 buysl = round(entry - atr_price, 2)
@@ -187,7 +190,7 @@ def ATRClose(symbol, atr_price):
 
                 if pos.type == mt.ORDER_TYPE_BUY:
                     print(
-                        f"[ Entry: {pos.price_open} | Current: {pos.price_current} | SL: {buysl} | TP: {buytp} | Profit: {pos.profit:.2} ]"
+                        f"[ Trade #: {i} | Entry: {pos.price_open} | Current: {pos.price_current} | SL: {buysl} | TP: {buytp} | Profit: {pos.profit:.2} ]"
                     )
                     time.sleep(3)
                     if price < buysl:
@@ -202,7 +205,7 @@ def ATRClose(symbol, atr_price):
                         break
                 elif pos.type == mt.ORDER_TYPE_SELL:
                     print(
-                        f"[ Entry = {pos.price_open} | Current: {pos.price_current} | SL: {sellsl} | TP: {selltp} | Profit: {pos.profit} ]"
+                        f"[ Trade #: {i} | Entry: {pos.price_open} | Current: {pos.price_current} | SL: {sellsl} | TP: {selltp} | Profit: {pos.profit} ]"
                     )
                     time.sleep(3)
                     if price > sellsl:
@@ -215,6 +218,9 @@ def ATRClose(symbol, atr_price):
                         exits += KillSwitch(symbol)
                         in_pos = False
                         break
+
+                i += 1
     else:
         print(f"Open positions = {len(positions)}")
+
     return exits

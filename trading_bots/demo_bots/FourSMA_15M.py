@@ -70,7 +70,7 @@ def smaSignal():
         ):
             return 1
         else:
-            return 0
+            return 1
     except:
         print("Not enough data...")
 
@@ -86,12 +86,13 @@ def bot(signal):
     print("\n🤖Running SMA bot...🤖\n")
 
     exits = 0
-
+    msg = ""
     df = getData()[0]
     price = getData()[1]
     atr_price = df["ATR"].iloc[-1]
+    total_positions = 2
 
-    if mt.positions_total() < 2:
+    while mt.positions_total() < total_positions:
 
         if signal == 1:
             sl = df["Close"].iloc[-1] - atr_price
@@ -104,8 +105,7 @@ def bot(signal):
             print(f"B-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
             if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"V75 -> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
-                send_alert(msg)
+                msg = f"V75 (M15)-> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
 
         if signal == -1:
             sl = df["Close"].iloc[-1] + atr_price
@@ -118,11 +118,10 @@ def bot(signal):
             print(f"S-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
             if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"V75 -> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
-                send_alert(msg)
+                msg = f"V75 (M15)-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
 
-    else:
-        exits += uf.ATRClose(SYMBOL, atr_price)
+    send_alert(msg)
+    exits += uf.ATRClose(SYMBOL, atr_price)
 
     if exits > 0:
         print(f"Exited {exits} trades")
@@ -137,7 +136,6 @@ def run():
     while True:
         signal = smaSignal()
         if signal != 0:
-            uf.KillSwitch(SYMBOL)
             bot(signal)
 
         else:
