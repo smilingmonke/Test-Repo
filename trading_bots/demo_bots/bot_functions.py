@@ -192,7 +192,7 @@ def ATRClose(symbol, atr_price):
                 elif pos.type == 0:
                     trade_type = "BUY"
                 print(
-                    f"<\ Trade #: {i} | {trade_type} | Lots: {pos.volume} | Profit: {pos.profit:.2} \>"
+                    f"< Trade #: {i} | {trade_type} | Lots: {pos.volume} | Profit: {pos.profit:.2} >"
                 )
                 time.sleep(3)
                 entry = pos.price_open
