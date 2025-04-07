@@ -44,7 +44,7 @@ def getData():
     df["MA20"] = ta.sma(close=df.Close, length=20)
     df["MA100"] = ta.sma(close=df.Close, length=100)
     df["MA200"] = ta.sma(close=df.Close, length=200)
-    df["ATRMean"] = df["ATR"].rolling(12).mean()
+    # df["ATRMean"] = df["ATR"].rolling(12).mean()
 
     return df, ask
 
