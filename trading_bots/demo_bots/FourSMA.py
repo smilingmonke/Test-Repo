@@ -21,7 +21,7 @@ LOTS = 0.01
 # Checks the validity of the signal
 def smaSignal():
 
-    df = uf.getData()[0]
+    df = uf.getData(symbol=SYMBOL, timeframe="hourly")[0]
 
     try:
         if (
@@ -39,7 +39,7 @@ def smaSignal():
         ):
             return 1
         else:
-            return 1
+            return 0
     except:
         print("Not enough data...")
 
@@ -57,8 +57,8 @@ def bot(signal):
 
     exits = 0
     msg = ""
-    df = uf.getData()[0]
-    price = uf.getData()[1]
+    df = uf.getData(symbol=SYMBOL, timeframe="hourly")[0]
+    price = uf.getData(symbol=SYMBOL, timeframe="hourly")[1]
     atr_price = df["ATR"].iloc[-1]
     total_positions = 2
 

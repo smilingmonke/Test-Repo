@@ -255,7 +255,7 @@ def getData(symbol, timeframe):
         if not mt.login(login=li.login_id, password=li.password, server=li.server):
             print(f"Failed to login to Account #{li.login_id}")
 
-    timeframe = mt.TIMEFRAME_H1
+    timeframe = timeframes.get(timeframe)
     now = datetime.now()
     date_from = now - timedelta(days=21)
 
