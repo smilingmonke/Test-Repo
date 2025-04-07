@@ -82,13 +82,13 @@ def send_alert(msg):
 
 
 def bot(signal):
-
-    print("\n🤖Running SMA bot...🤖\n")
+    os.system("cls" if os.name == "nt" else "clear")
+    print("\n🤖^^^Running SMA bot^^^🤖\n")
+    time.sleep(3)
 
     exits = 0
     msg = ""
     df = getData()[0]
-    price = getData()[1]
     atr_price = df["ATR"].iloc[-1]
     total_positions = 2
 

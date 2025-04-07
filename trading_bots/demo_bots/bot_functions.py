@@ -1,4 +1,5 @@
 import time
+import os
 import pandas as pd
 import MetaTrader5 as mt
 from datetime import datetime, timedelta
@@ -165,8 +166,7 @@ def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
 # Exits if price reaches the previous close plus ATR
 def ATRClose(symbol, atr_price):
 
-    print("\n🔍Checking if its time to exit...🔍\n")
-
+    trade_type = ""
     in_pos = False
     atr_factor = 1
     atr_price *= atr_factor
@@ -178,8 +178,19 @@ def ATRClose(symbol, atr_price):
     if len(positions) > 0:
         in_pos = True
         while in_pos:
+            positions = mt.positions_get()
+            os.system("cls" if os.name == "nt" else "clear")
+            print("\n🔍Checking if its time to exit...🔍\n")
             i = 1
             for pos in positions:
+
+                if pos.type == 1:
+                    trade_type = "SELL"
+                elif pos.type == 0:
+                    trade_type = "BUY"
+                print(
+                    f"<\ Trade #: {i} | {trade_type} | Lots: {pos.volume} | Profit: {pos.profit:.2} \>"
+                )
 
                 entry = pos.price_open
 
@@ -189,9 +200,6 @@ def ATRClose(symbol, atr_price):
                 selltp = round(entry - atr_price, 2)
 
                 if pos.type == mt.ORDER_TYPE_BUY:
-                    print(
-                        f"[ Trade #: {i} | Entry: {pos.price_open} | Current: {pos.price_current} | SL: {buysl} | TP: {buytp} | Profit: {pos.profit:.2} ]"
-                    )
                     time.sleep(3)
                     if price < buysl:
                         print("🔴Hit SL exiting buy...")
@@ -204,9 +212,6 @@ def ATRClose(symbol, atr_price):
                         in_pos = False
                         break
                 elif pos.type == mt.ORDER_TYPE_SELL:
-                    print(
-                        f"[ Trade #: {i} | Entry: {pos.price_open} | Current: {pos.price_current} | SL: {sellsl} | TP: {selltp} | Profit: {pos.profit} ]"
-                    )
                     time.sleep(3)
                     if price > sellsl:
                         print("🔴Hit SL exiting sell...")
@@ -220,6 +225,7 @@ def ATRClose(symbol, atr_price):
                         break
 
                 i += 1
+
     else:
         print(f"Open positions = {len(positions)}")
 

@@ -70,7 +70,7 @@ def smaSignal():
         ):
             return 1
         else:
-            return 0
+            return 1
     except:
         print("Not enough data...")
 
@@ -82,8 +82,9 @@ def send_alert(msg):
 
 
 def bot(signal):
-
-    print("\n🤖Running SMA bot...🤖\n")
+    os.system("cls" if os.name == "nt" else "clear")
+    print("\n🤖^^^Running SMA bot^^^🤖\n")
+    time.sleep(3)
 
     exits = 0
     msg = ""
