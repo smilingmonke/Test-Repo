@@ -121,6 +121,9 @@ def bot(signal):
                 msg = f"V75 (M15)-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
 
     send_alert(msg)
+
+    print(df.tail(1))
+
     exits += uf.ATRClose(SYMBOL, atr_price)
 
     if exits > 0:
