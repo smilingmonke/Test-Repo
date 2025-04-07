@@ -10,10 +10,10 @@ import pandas_ta as ta
 if not mt.initialize():
     print(f"failed to initialize {mt.last_error()}")
 else:
-    if not mt.login(login=li.login_id, password=li.password, server=li.server):
+    if not mt.login(login=li.login2_id, password=li.password, server=li.server):
         print(f"Failed to login to Account #{li.login_id}")
 
-symbol = "Volatility 75 Index"
+symbol = "XAUUSD"
 timeframe = mt.TIMEFRAME_H1
 now = datetime.now()
 yesterday = now - timedelta(days=1)
@@ -29,6 +29,4 @@ df.columns = ["Local time", "Open", "High", "Low", "Close"]
 df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
 atr_price = df.ATR.iloc[-1]
 
-exits = 0
-exits += uf.ATRClose(symbol, atr_price)
-print(f"exited {exits} trades")
+uf.overtime(3, symbol)

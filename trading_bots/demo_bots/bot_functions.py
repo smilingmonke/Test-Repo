@@ -146,6 +146,22 @@ def KillSwitch(symbol):
     return trades_closed
 
 
+def overtime(days, symbol):
+
+    positions = mt.positions_get()
+    now = datetime.now()
+    for pos in positions:
+
+        time = datetime.fromtimestamp(pos.time) + timedelta(days=3)
+        print(time)
+        if now > time:
+            print(f"🕒 {now} > {time} exiting trade as it has gone overtime 🕒")
+            KillSwitch(symbol)
+            break
+        else:
+            print(f"🕒 {now} is not > {time} staying in trade 🕒")
+
+
 # Creates a trade
 def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
 
