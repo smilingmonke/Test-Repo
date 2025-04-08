@@ -255,15 +255,15 @@ def ATRClose(symbol, atr_price):
 def getData(symbol, timeframe):
 
     timeframes = {
-        "one_minute": mt.TIMEFRAME_M1,
-        "five_minute": mt.TIMEFRAME_M5,
-        "fifteen_minute": mt.TIMEFRAME_M15,
-        "thirty_minute": mt.TIMEFRAME_M30,
-        "hourly": mt.TIMEFRAME_H1,
-        "four_hour": mt.TIMEFRAME_H4,
-        "daily": mt.TIMEFRAME_D1,
-        "weekly": mt.TIMEFRAME_W1,
-        "monthly": mt.TIMEFRAME_MN1,
+        "M1": mt.TIMEFRAME_M1,
+        "M5": mt.TIMEFRAME_M5,
+        "M15": mt.TIMEFRAME_M15,
+        "M30": mt.TIMEFRAME_M30,
+        "H1": mt.TIMEFRAME_H1,
+        "H4": mt.TIMEFRAME_H4,
+        "D1": mt.TIMEFRAME_D1,
+        "W1": mt.TIMEFRAME_W1,
+        "MN1": mt.TIMEFRAME_MN1,
     }
 
     if not mt.initialize():

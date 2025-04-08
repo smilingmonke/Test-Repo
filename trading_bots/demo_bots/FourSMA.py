@@ -21,7 +21,7 @@ LOTS = 0.01
 # Checks the validity of the signal
 def smaSignal():
 
-    df = uf.getData(symbol=SYMBOL, timeframe="hourly")[0]
+    df = uf.getData(symbol=SYMBOL, timeframe="H1")[0]
 
     try:
         if (
@@ -57,8 +57,8 @@ def bot(signal):
 
     exits = 0
     msg = ""
-    df = uf.getData(symbol=SYMBOL, timeframe="hourly")[0]
-    price = uf.getData(symbol=SYMBOL, timeframe="hourly")[1]
+    df = uf.getData(symbol=SYMBOL, timeframe="H1")[0]
+    price = uf.getData(symbol=SYMBOL, timeframe="H1")[1]
     atr_price = df["ATR"].iloc[-1]
     total_positions = 3
 
@@ -94,7 +94,7 @@ def bot(signal):
             if r.retcode == mt.TRADE_RETCODE_DONE:
                 msg = f"V75 (H1)-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
 
-    # send_alert(msg)
+    send_alert(msg)
 
     print(df.tail(1))
     time.sleep(3)
@@ -104,10 +104,6 @@ def bot(signal):
     if exits > 0:
         print(f"Exited {exits} trades")
         uf.LossPause(1000)
-    # print(df.tail(20))
-
-
-# bot()
 
 
 def run():
