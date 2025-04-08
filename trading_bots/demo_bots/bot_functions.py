@@ -32,8 +32,9 @@ def symbol_selector():
 FUNCTIONS TO MAKE :>>
 1) Kill switch - exits every open trade and pending order ✅
 2) Trade Pauser - determines if the bot has lot x% in x number of trades and pauses the bot for an x period of time ✅
-3) Overtime - exits if trade exceed time limit
-3) ATRClose - exits if price reaches the previous close plus ATR
+3) Overtime - exits if trade exceed time limit ✅
+3) ATRClose - exits if price reaches the previous close plus ATR ✅
+4) 
 """
 
 
