@@ -16,12 +16,13 @@ SYMBOL = "Volatility 75 Index"
 ATR_F = 15
 RISKREWARD = 1.5
 LOTS = 0.01
+timeframe = "H1"
 
 
 # Checks the validity of the signal
 def smaSignal():
 
-    df = uf.getData(symbol=SYMBOL, timeframe="H1")[0]
+    df = uf.getData(symbol=SYMBOL, timeframe=timeframe)[0]
 
     try:
         if (
@@ -57,8 +58,8 @@ def bot(signal):
 
     exits = 0
     msg = ""
-    df = uf.getData(symbol=SYMBOL, timeframe="H1")[0]
-    price = uf.getData(symbol=SYMBOL, timeframe="H1")[1]
+    df = uf.getData(symbol=SYMBOL, timeframe=timeframe)[0]
+    price = uf.getData(symbol=SYMBOL, timeframe=timeframe)[1]
     atr_price = df["ATR"].iloc[-1]
     total_positions = 3
 
@@ -77,7 +78,7 @@ def bot(signal):
             tp = round(tp, 2)
 
             if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"V75 (H1)-> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
+                msg = f"V75 ({timeframe})-> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
 
         if signal == -1:
 
@@ -92,7 +93,7 @@ def bot(signal):
             tp = round(tp, 2)
 
             if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"V75 (H1)-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
+                msg = f"V75 ({timeframe})-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
 
     send_alert(msg)
 
