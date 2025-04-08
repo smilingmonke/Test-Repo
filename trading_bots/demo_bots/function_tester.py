@@ -28,5 +28,3 @@ df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
 df.columns = ["Local time", "Open", "High", "Low", "Close"]
 df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
 atr_price = df.ATR.iloc[-1]
-
-uf.overtime(3, symbol)

@@ -163,7 +163,7 @@ def overtime(days, symbol):
 
 
 # Creates a trade
-def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):  # sl
+def CreateTrade(symbol, volume, price, sl, tp, order_type, deviation):
 
     order = {
         "action": mt.TRADE_ACTION_DEAL,

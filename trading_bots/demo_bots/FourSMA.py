@@ -60,33 +60,37 @@ def bot(signal):
     df = uf.getData(symbol=SYMBOL, timeframe="hourly")[0]
     price = uf.getData(symbol=SYMBOL, timeframe="hourly")[1]
     atr_price = df["ATR"].iloc[-1]
-    total_positions = 2
+    total_positions = 3
 
     while mt.positions_total() < total_positions:
 
         if signal == 1:
-            sl = df["Close"].iloc[-1] - atr_price
-            tp = df["Close"].iloc[-1] + (atr_price * RISKREWARD)
-
-            sl = round(sl, 2)
-            tp = round(tp, 2)
 
             r = mt.Buy(SYMBOL, LOTS)
             print(f"B-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
-            if r.retcode == mt.TRADE_RETCODE_DONE:
-                msg = f"V75 (H1)-> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
 
-        if signal == -1:
-            sl = df["Close"].iloc[-1] + atr_price
-            tp = df["Close"].iloc[-1] - (atr_price * RISKREWARD)
+            sl = r.price - atr_price
+            tp = r.price + (atr_price * RISKREWARD)
 
             sl = round(sl, 2)
             tp = round(tp, 2)
 
+            if r.retcode == mt.TRADE_RETCODE_DONE:
+                msg = f"V75 (H1)-> 🟢BUY @{price}, SL = {sl}, TP = {tp}"
+
+        if signal == -1:
+
             r = mt.Sell(SYMBOL, LOTS)
             print(f"S-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
+
+            sl = r.price + atr_price
+            tp = r.price - (atr_price * RISKREWARD)
+
+            sl = round(sl, 2)
+            tp = round(tp, 2)
+
             if r.retcode == mt.TRADE_RETCODE_DONE:
                 msg = f"V75 (H1)-> 🔴SELL @{price}, SL = {sl}, TP = {tp}"
 
