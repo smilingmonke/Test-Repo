@@ -1,31 +1,92 @@
 import time
 import os
+import requests
 import pandas as pd
 import pandas_ta as ta
 import MetaTrader5 as mt
 from datetime import datetime, timedelta
 import login_info as li
+import discord_info as di
+
+
+# Sends the message to discord
+def send_alert(msg):
+    payload = {"content": msg}
+    response = requests.post(di.URL, payload, headers=di.headers)
 
 
 # returns selected symbol
 def symbol_selector():
-    symbols = {1: "Volatility 75 Index", 2: "Volatility 25 Index"}
 
-    for i in range(1, len(symbols) + 1):
-        print(f"{i}. {symbols[i]}")
+    print("\n")
+    symbols = {
+        1: "Volatility 75 Index",
+        2: "Volatility 25 Index",
+        3: "Volatility 50 Index",
+    }
+    validSymbol = False
 
-    symbol = int(input(f"Please choose a symbol> "))
+    while not validSymbol:
 
-    try:
-        if not symbols[symbol]:
-            print(f"Invalid symbol key :{symbol}")
+        for symbol in symbols:
+            print(f"{symbol}: {symbols.get(symbol)}")
+
+        res = input(f"Choose a symbol> ")
+
+        if not res.isdigit():
+            print("\nEnter a number!\n")
+            continue
         else:
-            symbol = symbols[symbol]
-            print(f"Selected symbol: {symbol}")
-    except:
-        print(f"Invalid symbol key :{symbol}")
+            res = int(res)
 
-    return symbol
+        if not symbols.get(res):
+            print(f"\n{res} is invalid...\n")
+            continue
+        else:
+            selectedSymbol = symbols.get(res)
+            validSymbol = True
+
+    print(f"\nSelected Timeframe: {selectedSymbol}\n")
+
+    return selectedSymbol
+
+
+def timeframe_selector():
+
+    timeframes = {
+        "M1": mt.TIMEFRAME_M1,
+        "M5": mt.TIMEFRAME_M5,
+        "M15": mt.TIMEFRAME_M15,
+        "M30": mt.TIMEFRAME_M30,
+        "H1": mt.TIMEFRAME_H1,
+        "H4": mt.TIMEFRAME_H4,
+        "D1": mt.TIMEFRAME_D1,
+        "W1": mt.TIMEFRAME_W1,
+        "MN1": mt.TIMEFRAME_MN1,
+    }
+
+    validTf = False
+
+    while not validTf:
+
+        for tf in timeframes:
+            print(f"{tf}: {timeframes.get(tf)}")
+
+        res = input(f"Choose a timeframe> ")
+
+        if not res.isalnum:
+            print("\nChoose a valid option\n")
+            continue
+
+        if not timeframes.get(res):
+            print(f"\n{res} is invalid\n")
+            continue
+        else:
+            selectedTf = timeframes.get(res)
+            validTf = True
+
+    print(f"\nSelected Timeframe: {selectedTf}\n")
+    return selectedTf
 
 
 """
@@ -36,6 +97,26 @@ FUNCTIONS TO MAKE :>>
 3) ATRClose - exits if price reaches the previous close plus ATR ✅
 4) 
 """
+
+
+# Returns the timeframe in the format required for MT5
+def getTimeframe(tf):
+    print("\n")
+    timeframes = {
+        "M1": mt.TIMEFRAME_M1,
+        "M5": mt.TIMEFRAME_M5,
+        "M15": mt.TIMEFRAME_M15,
+        "M30": mt.TIMEFRAME_M30,
+        "H1": mt.TIMEFRAME_H1,
+        "H4": mt.TIMEFRAME_H4,
+        "D1": mt.TIMEFRAME_D1,
+        "W1": mt.TIMEFRAME_W1,
+        "MN1": mt.TIMEFRAME_MN1,
+    }
+
+    timeframe = timeframes.get(tf)
+
+    return timeframe
 
 
 # Cancels a pending order
@@ -199,7 +280,9 @@ def ATRClose(symbol, atr_price):
         while in_pos:
             price = mt.symbol_info_tick(symbol).ask
             positions = mt.positions_get()
+
             os.system("cls" if os.name == "nt" else "clear")
+
             print("\n🔍Checking if its time to exit...🔍\n")
             i = 1
             for pos in positions:
@@ -251,20 +334,11 @@ def ATRClose(symbol, atr_price):
     return exits
 
 
-# Retrieves price info and ask price then puts it into a dataframe
-def getData(symbol, timeframe):
+# Retrieves price info, four smas, mins and maxes, atr, and atrMean then puts it into a dataframe
+def getData4SMAs(symbol, timeframe):
 
-    timeframes = {
-        "M1": mt.TIMEFRAME_M1,
-        "M5": mt.TIMEFRAME_M5,
-        "M15": mt.TIMEFRAME_M15,
-        "M30": mt.TIMEFRAME_M30,
-        "H1": mt.TIMEFRAME_H1,
-        "H4": mt.TIMEFRAME_H4,
-        "D1": mt.TIMEFRAME_D1,
-        "W1": mt.TIMEFRAME_W1,
-        "MN1": mt.TIMEFRAME_MN1,
-    }
+    HLBackCandles = 9
+    ATRMean = 12
 
     if not mt.initialize():
         print(f"failed to initialize {mt.last_error()}")
@@ -272,11 +346,9 @@ def getData(symbol, timeframe):
         if not mt.login(login=li.login_id, password=li.password, server=li.server):
             print(f"Failed to login to Account #{li.login_id}")
 
-    timeframe = timeframes.get(timeframe)
+    timeframe = timeframe
     now = datetime.now()
     date_from = now - timedelta(days=21)
-
-    ask = mt.symbol_info_tick(symbol).ask
 
     data = mt.copy_rates_range(symbol, timeframe, date_from, now)
     df = pd.DataFrame(data)
@@ -290,6 +362,59 @@ def getData(symbol, timeframe):
     df["MA20"] = ta.sma(close=df.Close, length=20)
     df["MA100"] = ta.sma(close=df.Close, length=100)
     df["MA200"] = ta.sma(close=df.Close, length=200)
-    # df["ATRMean"] = df["ATR"].rolling(12).mean()
+    df["ATRMean"] = df["ATR"].rolling(ATRMean).mean()
+    df["mins"] = df["Low"].rolling(window=HLBackCandles).min()
+    df["maxs"] = df["High"].rolling(window=HLBackCandles).max()
 
-    return df, ask
+    return df
+
+
+# Returns the a signal if the conditions are met with 4 SMAs
+def fourSMASignal(df1):
+
+    signal = 0
+
+    if (
+        df1["MA10"].iloc[-1]
+        < df1["MA20"].iloc[-1]
+        < df1["MA100"].iloc[-1]
+        < df1["MA200"].iloc[-1]
+    ):
+        signal = -1
+    elif (
+        df1["MA10"].iloc[-1]
+        > df1["MA20"].iloc[-1]
+        > df1["MA100"].iloc[-1]
+        > df1["MA200"].iloc[-1]
+    ):
+        signal = 1
+    else:
+        signal = 0
+
+    return signal
+
+
+# Determines if the latest candle is higher or lower than the previous candles
+def HLSignal(df1, SMASignal):
+
+    if SMASignal == -1 and df1["High"].iloc[-1] >= df1["maxs"].iloc[-1]:
+        HLSignal = -1
+
+    elif SMASignal == 1 and df1["Low"].iloc[-1] <= df1["mins"].iloc[-1]:
+        HLSignal = 1
+
+    else:
+        HLSignal = 0
+
+    return HLSignal
+
+
+def SMASignal(df1):
+
+    try:
+        smaSignal = fourSMASignal(df1)
+        hlSignal = HLSignal(df1, smaSignal)
+    except:
+        print("<<< Not enough data >>>")
+
+    return hlSignal

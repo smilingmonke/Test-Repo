@@ -11,38 +11,11 @@ import discord_info as di
 import bot_functions as uf
 
 
-SYMBOL = "Volatility 75 Index"
-
+SYMBOL = uf.symbol_selector()
+timeframe = uf.timeframe_selector()
 ATR_F = 15
 RISKREWARD = 1.5
 LOTS = 0.01
-timeframe = "H1"
-
-
-# Checks the validity of the signal
-def smaSignal():
-
-    df = uf.getData(symbol=SYMBOL, timeframe=timeframe)[0]
-
-    try:
-        if (
-            df["MA10"].iloc[-1]
-            < df["MA20"].iloc[-1]
-            < df["MA100"].iloc[-1]
-            < df["MA200"].iloc[-1]
-        ):
-            return -1
-        elif (
-            df["MA10"].iloc[-1]
-            > df["MA20"].iloc[-1]
-            > df["MA100"].iloc[-1]
-            > df["MA200"].iloc[-1]
-        ):
-            return 1
-        else:
-            return 0
-    except:
-        print("Not enough data...")
 
 
 #!!! Discord message
@@ -51,23 +24,31 @@ def send_alert(msg):
     response = requests.post(di.URL, payload, headers=di.headers)
 
 
-def bot(signal):
+# Buys and Sells determined on the dignal
+def buySellBot(signal):
+
     os.system("cls" if os.name == "nt" else "clear")
     print("\n🤖^^^Running SMA bot^^^🤖\n")
     time.sleep(3)
 
     exits = 0
     msg = ""
-    df = uf.getData(symbol=SYMBOL, timeframe=timeframe)[0]
-    price = uf.getData(symbol=SYMBOL, timeframe=timeframe)[1]
-    atr_price = df["ATR"].iloc[-1]
-    total_positions = 3
 
-    while mt.positions_total() < total_positions:
+    df = uf.getData4SMAs(symbol=SYMBOL, timeframe=timeframe)
+
+    price = mt.symbol_tick_info(SYMBOL).ask
+
+    atr_price = df["ATR"].iloc[-1]
+
+    total_positions = 3
+    positions = mt.positions_get(symbol=SYMBOL)
+
+    while len(positions) < total_positions:
 
         if signal == 1:
 
             r = mt.Buy(SYMBOL, LOTS)
+
             print(f"B-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
 
@@ -83,6 +64,7 @@ def bot(signal):
         if signal == -1:
 
             r = mt.Sell(SYMBOL, LOTS)
+
             print(f"S-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
 
@@ -97,7 +79,6 @@ def bot(signal):
 
     send_alert(msg)
 
-    print(df.tail(1))
     time.sleep(3)
 
     exits += uf.ATRClose(SYMBOL, atr_price)
@@ -108,10 +89,15 @@ def bot(signal):
 
 
 def run():
+
     while True:
-        signal = smaSignal()
+
+        df = uf.getData4SMAs(SYMBOL, timeframe)
+
+        signal = uf.SMASignal(df)
+
         if signal != 0:
-            bot(signal)
+            buySellBot(signal)
 
         else:
             os.system("cls" if os.name == "nt" else "clear")
