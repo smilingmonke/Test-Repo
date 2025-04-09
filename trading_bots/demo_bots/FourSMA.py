@@ -101,7 +101,7 @@ def run():
 
         else:
             os.system("cls" if os.name == "nt" else "clear")
-            print("❌NO SIGNAL❌")
+            print(f"❌NO SIGNAL FOR {SYMBOL}❌")
             time.sleep(30)
 
 
