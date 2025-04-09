@@ -17,6 +17,7 @@ symbol = "XAUUSD"
 v75 = "Volatility 75 Index"
 tf = "H1"
 
-symbol = uf.symbol_selector()
-timeframe = uf.timeframe_selector()
-print(f"Symbol: {symbol}, TF: {timeframe}")
+# symbol = uf.symbol_selector()
+# timeframe = uf.timeframe_selector()
+lots = uf.lots_selector()
+print(f"LOTS = {lots}")

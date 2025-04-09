@@ -11,11 +11,11 @@ import discord_info as di
 import bot_functions as uf
 
 
-SYMBOL = uf.symbol_selector()
+symbol = uf.symbol_selector()
 timeframe = uf.timeframe_selector()
+lots = uf.lots_selector()
 ATR_F = 15
 RISKREWARD = 1.5
-LOTS = 0.01
 
 
 #!!! Discord message
@@ -34,20 +34,20 @@ def buySellBot(signal):
     exits = 0
     msg = ""
 
-    df = uf.getData4SMAs(symbol=SYMBOL, timeframe=timeframe)
+    df = uf.getData4SMAs(symbol=symbol, timeframe=timeframe)
 
-    price = mt.symbol_tick_info(SYMBOL).ask
+    price = mt.symbol_tick_info(symbol).ask
 
     atr_price = df["ATR"].iloc[-1]
 
     total_positions = 3
-    positions = mt.positions_get(symbol=SYMBOL)
+    positions = mt.positions_get(symbol=symbol)
 
     while len(positions) < total_positions:
 
         if signal == 1:
 
-            r = mt.Buy(SYMBOL, LOTS)
+            r = mt.Buy(symbol, lots)
 
             print(f"B-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
@@ -63,7 +63,7 @@ def buySellBot(signal):
 
         if signal == -1:
 
-            r = mt.Sell(SYMBOL, LOTS)
+            r = mt.Sell(symbol, lots)
 
             print(f"S-price: {price}, sl{sl}, tp{tp}")
             print(r.comment)
@@ -81,7 +81,7 @@ def buySellBot(signal):
 
     time.sleep(3)
 
-    exits += uf.ATRClose(SYMBOL, atr_price)
+    exits += uf.ATRClose(symbol, atr_price)
 
     if exits > 0:
         print(f"Exited {exits} trades")
@@ -92,7 +92,7 @@ def run():
 
     while True:
 
-        df = uf.getData4SMAs(SYMBOL, timeframe)
+        df = uf.getData4SMAs(symbol, timeframe)
 
         signal = uf.SMASignal(df)
 
@@ -101,7 +101,7 @@ def run():
 
         else:
             os.system("cls" if os.name == "nt" else "clear")
-            print(f"❌NO SIGNAL FOR {SYMBOL}❌")
+            print(f"❌NO SIGNAL FOR {symbol}❌")
             time.sleep(30)
 
 

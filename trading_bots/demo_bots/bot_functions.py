@@ -31,7 +31,7 @@ def symbol_selector():
         for symbol in symbols:
             print(f"{symbol}: {symbols.get(symbol)}")
 
-        res = input(f"Choose a symbol> ")
+        res = input("Choose a symbol > ")
 
         if not res.isdigit():
             print("\nEnter a number!\n")
@@ -72,7 +72,7 @@ def timeframe_selector():
         for tf in timeframes:
             print(f"{tf}: {timeframes.get(tf)}")
 
-        res = input(f"Choose a timeframe> ")
+        res = input("Choose a timeframe > ")
 
         if not res.isalnum:
             print("\nChoose a valid option\n")
@@ -87,6 +87,33 @@ def timeframe_selector():
 
     print(f"\nSelected Timeframe: {selectedTf}\n")
     return selectedTf
+
+
+# Selects the entered volume as the lot size used for the trades
+def lots_selector():
+    max = 100
+    min = 0.001
+
+    validVol = False
+
+    while not validVol:
+        print(f"\nThe max volume is {max}, the minimum volume is {min}...")
+        res = input("Choose your volume > ")
+
+        try:
+            res = float(res)
+        except ValueError:
+            print("\n Enter a number! ")
+            continue
+
+        if res > max or res < min:
+            print("^^^The volume entered does not meet the proper requirements^^^\n")
+            continue
+        else:
+            lots = res
+            validVol = True
+
+    return lots
 
 
 """
