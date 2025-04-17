@@ -59,6 +59,7 @@ def CrossAlert():
         elif signal == -1:
             msg = f"Bearish movements on {symbol}"
 
+        print(msg)
         uf.send_alert(msg)
 
     else:
