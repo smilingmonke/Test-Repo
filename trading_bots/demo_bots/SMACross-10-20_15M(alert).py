@@ -67,11 +67,11 @@ def CrossAlert():
 
 CrossAlert()
 
-# schedule.every(15).minutes.do(CrossAlert)
+schedule.every(15).minutes.do(CrossAlert)
 
-# while True:
-#     try:
-#         schedule.run_pending()
-#     except:
-#         print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
-#         time.sleep(60)
+while True:
+    try:
+        schedule.run_pending()
+    except:
+        print("*** WAITING FOR A CONNECTION RESTING FOR A MIN... ***")
+        time.sleep(60)
