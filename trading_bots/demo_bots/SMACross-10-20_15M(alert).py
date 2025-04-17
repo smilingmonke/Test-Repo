@@ -84,7 +84,7 @@ def CrossAlert():
         print("NO definite movemnt")
 
 
-schedule.every(1).minutes.do(CrossAlert)
+schedule.every().second.do(CrossAlert)
 
 while True:
     try:
