@@ -12,13 +12,13 @@ else:
     if not mt.login(login=li.login_id, password=li.password, server=li.server):
         print(f"Failed to login to Account #{li.login_id}")
 #!!!
-symbol = "Volatility 25 Index"
+symbol = "AMD"
 #!!!
 timeframe = mt.TIMEFRAME_H1
 now = datetime.now()
 today = datetime.today()
 #!!!
-date_from = datetime(2019, 1, 1)
+date_from = datetime(2022, 1, 1)
 #!!!
 date_to = datetime(2025, 1, 1)
 
@@ -28,4 +28,4 @@ df["time"] = pd.to_datetime(df["time"], unit="s")
 df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
 df.columns = ["Local time", "Open", "High", "Low", "Close"]
 #!!!
-df.to_csv("v25_H_1_2019-2025.csv", index=False)
+df.to_csv("AMD_H_1_2019-2025.csv", index=False)

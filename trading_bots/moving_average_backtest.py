@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt
 from backtesting import Strategy, Backtest
 
 
-df = pd.read_csv("trading_bots\\v75_H_1_2019-2025.csv")
+df = pd.read_csv("trading_bots\\CSV\\EURUSD_H_1_2019-2025.csv")
 
-ma_length = 101
-
+ma_length = 200
+# ma_length = 100 5497 signals
+# ma_length = 200 7314 signals
 df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=14)
 df["SMA"] = ta.sma(df.Close, length=ma_length)
 
@@ -78,7 +79,8 @@ def HLSignal(x):
 
 df["HLSignal"] = df.apply(HLSignal, axis=1)
 
-# print(df[df["HLSignal"] == 2].count())
+print(df[df["HLSignal"] == 2].count())
+print(df[df["HLSignal"] == 1].count())
 
 
 def pointpos(x):
@@ -125,39 +127,8 @@ def SIGNAL():
 # ATR Trailing SL
 
 
-# class MyStrat(Strategy):
-#     atr_f = 1.0
-
-#     def init(self):
-#         super().init()
-#         self.signal1 = self.I(SIGNAL)
-
-#     def next(self):
-#         super().next()
-#         for trade in self.trades:
-#             if trade.is_long:
-#                 trade.sl = max(
-#                     trade.sl or -np.inf,
-#                     self.data.Close[-1] - self.data.ATR[-1] / self.atr_f,
-#                 )
-#             else:
-#                 trade.sl = min(
-#                     trade.sl or np.inf,
-#                     self.data.Close[-1] + self.data.ATR[-1] / self.atr_f,
-#                 )
-
-#         if self.signal1 == 2 and len(self.trades) <= 0:  # trades number change!
-#             sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
-#             self.buy(sl=sl1)
-#         elif self.signal1 == 1 and len(self.trades) <= 0:  # trades number change!
-#             sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
-#             self.sell(sl=sl1)
-
-
-# ATR Fixed SL & TP
 class MyStrat(Strategy):
     atr_f = 1.0
-    TPSLR = 2.0
 
     def init(self):
         super().init()
@@ -165,18 +136,50 @@ class MyStrat(Strategy):
 
     def next(self):
         super().next()
+        for trade in self.trades:
+            if trade.is_long:
+                trade.sl = max(
+                    trade.sl or -np.inf,
+                    self.data.Close[-1] - self.data.ATR[-1] / self.atr_f,
+                )
+            else:
+                trade.sl = min(
+                    trade.sl or np.inf,
+                    self.data.Close[-1] + self.data.ATR[-1] / self.atr_f,
+                )
 
-        if self.signal1 == 2:
+        if self.signal1 == 2 and len(self.trades) <= 0:  # trades number change!
             sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
-            tp1 = self.data.Close[-1] + self.data.ATR[-1] * self.TPSLR / self.atr_f
-            self.buy(sl=sl1, tp=tp1)
-        elif self.signal1 == 1:
+            self.buy(sl=sl1)
+        elif self.signal1 == 1 and len(self.trades) <= 0:  # trades number change!
             sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
-            tp1 = self.data.Close[-1] - self.data.ATR[-1] * self.TPSLR / self.atr_f
-            self.sell(sl=sl1, tp=tp1)
+            self.sell(sl=sl1)
 
 
-bt = Backtest(df, MyStrat, cash=10_000_000_000, commission=0.0, margin=0.1)
+# ATR Fixed SL & TP
+# class MyStrat(Strategy):
+#     atr_f = 0.5
+#     TPSLR = 2.0
+
+#     def init(self):
+#         super().init()
+#         self.signal1 = self.I(SIGNAL)
+
+#     def next(self):
+#         super().next()
+
+#         if self.signal1 == 2:
+#             sl1 = self.data.Close[-1] - self.data.ATR[-1] / self.atr_f
+#             tp1 = self.data.Close[-1] + self.data.ATR[-1] * self.TPSLR / self.atr_f
+#             self.buy(sl=sl1, tp=tp1)
+#         elif self.signal1 == 1:
+#             sl1 = self.data.Close[-1] + self.data.ATR[-1] / self.atr_f
+#             tp1 = self.data.Close[-1] - self.data.ATR[-1] * self.TPSLR / self.atr_f
+#             self.sell(sl=sl1, tp=tp1)
+
+
+# print(df)
+bt = Backtest(df, MyStrat, cash=10_000_000_000, commission=0.0, margin=0.001)
 stats = bt.run()
 print(stats)
-bt.plot()
+# bt.plot()
