@@ -63,15 +63,15 @@ def SMACross(x):
     if (
         not sma1_prev > sma2_prev
         and sma1 > sma2
-        and atr > bull_atr_mean
         and bartype == 1
+        and atr > bull_atr_mean
     ):
         return 1
     elif (
         not sma2_prev > sma1_prev
         and sma2 > sma1
-        and atr > bear_atr_mean
         and bartype == -1
+        and atr > bear_atr_mean
     ):
         return -1
     elif sma1 > sma2 and atr > bull_atr_mean and bartype == 1:
