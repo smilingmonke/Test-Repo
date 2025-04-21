@@ -45,7 +45,7 @@ def BullBear(df1):
 
 def SMACross(x):
 
-    bartype = x["barType"].iloc[-2]
+    bartype = x["bartype"].iloc[-2]
     sma1_prev = x.MA10.iloc[-3]
     sma2_prev = x.MA20.iloc[-3]
     sma1 = x.MA10.iloc[-2]
