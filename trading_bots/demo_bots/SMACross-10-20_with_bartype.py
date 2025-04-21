@@ -13,17 +13,16 @@ import discord_info as di
 import bot_functions as uf
 
 
-symbol = uf.symbol_selector()  # "Volatility 75 Index"
-tf = uf.timeframe_selector()  #  mt.TIMEFRAME_M15
+symbol = "Volatility 75 Index"  # uf.symbol_selector()
+tf = mt.TIMEFRAME_M15  # uf.timeframe_selector()
 
 
 # Initialization of dataframe
 def getData():
 
-    df = uf.getData4SMAs(symbol, tf)
-    df.drop(columns=["mins", "maxs", "MA100", "MA200", "ATR", "ATRMean"], inplace=True)
-    df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=1)
-    df["ATR_Avg"] = df["ATR"].rolling(4).mean()
+    df = uf.GetPriceData(symbol, tf)
+    df = uf.ATRBullBear(df)
+    # df["ATR_Avg"] = df["ATR"].rolling(4).mean()
     # df = df[df["MA20"] > 0]
 
     return df
@@ -55,15 +54,31 @@ def SMACross(x):
     sma1 = x.MA10.iloc[-2]
     sma2 = x.MA20.iloc[-2]
     atr = x.ATR.iloc[-2]
-    atr_avg = x.ATR_Avg.iloc[-2]
+    bear_atr_mean = x["bearAVG"].iloc[-2]
+    bull_atr_mean = x["bullAVG"].iloc[-2]
 
-    if not sma1_prev > sma2_prev and sma1 > sma2 and atr > atr_avg and bartype == 1:
+    if bear_atr_mean < 0:
+        bear_atr_mean = 0
+    if bull_atr_mean < 0:
+        bull_atr_mean = 0
+
+    if (
+        not sma1_prev > sma2_prev
+        and sma1 > sma2
+        and atr > bull_atr_mean
+        and bartype == 1
+    ):
         return 1
-    elif not sma2_prev > sma1_prev and sma2 > sma1 and atr > atr_avg and bartype == -1:
+    elif (
+        not sma2_prev > sma1_prev
+        and sma2 > sma1
+        and atr > bear_atr_mean
+        and bartype == -1
+    ):
         return -1
-    elif sma1 > sma2 and atr > atr_avg and bartype == 1:
+    elif sma1 > sma2 and atr > bull_atr_mean and bartype == 1:
         return 2
-    elif sma2 > sma1 and atr > atr_avg and bartype == -1:
+    elif sma2 > sma1 and atr > bear_atr_mean and bartype == -1:
         return -2
     else:
         return 0
@@ -102,10 +117,6 @@ def CrossAlert():
         print("*" * 120)
         print("NO definite movemnt")
 
-
-# df = getData()
-# signal = SMACross(df)
-# print(signal)
 
 schedule.every().second.do(CrossAlert)
 

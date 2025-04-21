@@ -396,6 +396,24 @@ def getData4SMAs(symbol, timeframe):
     return df
 
 
+# Determines if a bar is a bull or bear bar
+def BullBear(df1):
+
+    length = len(df1)
+    bartype = [0] * length
+
+    open = list(df1["Open"])
+    close = list(df1["Close"])
+
+    for row in range(0, length):
+        if open[row] > close[row]:
+            bartype[row] = -1
+        elif open[row] < close[row]:
+            bartype[row] = 1
+
+    return bartype
+
+
 # Returns the a signal if the conditions are met with 4 SMAs
 def fourSMASignal(df1):
 
@@ -419,6 +437,50 @@ def fourSMASignal(df1):
         signal = 0
 
     return signal
+
+
+def GetPriceData(symbol, timeframe):
+
+    ATRMean = 12
+
+    if not mt.initialize():
+        print(f"failed to initialize {mt.last_error()}")
+    else:
+        if not mt.login(login=li.login_id, password=li.password, server=li.server):
+            print(f"Failed to login to Account #{li.login_id}")
+
+    now = datetime.now()
+    date_from = now - timedelta(days=21)
+
+    data = mt.copy_rates_range(symbol, timeframe, date_from, now)
+    df = pd.DataFrame(data)
+    df["time"] = pd.to_datetime(df["time"], unit="s")
+    df.drop(columns=["spread", "real_volume", "tick_volume"], axis=1, inplace=True)
+    df.columns = ["Local time", "Open", "High", "Low", "Close"]
+
+    # Indicators
+    df["ATR"] = ta.atr(high=df.High, low=df.Low, close=df.Close, length=1)
+    df["MA10"] = ta.sma(close=df.Close, length=10)
+    df["MA20"] = ta.sma(close=df.Close, length=20)
+    df["ATRMean"] = df["ATR"].rolling(ATRMean).mean()
+    df["bartype"] = BullBear(df)
+
+    return df
+
+
+# Determines the ATR average of a specific bear
+def ATRBullBear(df1):
+
+    ATRMean = 12
+
+    bearBars = df1[df1["bartype"] == -1]
+    bullBars = df1[df1["bartype"] == 1]
+    df1.drop(columns=["ATRMean"], axis=1, inplace=True)
+
+    df1["bearAVG"] = bearBars["ATR"].rolling(ATRMean).mean()
+    df1["bullAVG"] = bullBars["ATR"].rolling(ATRMean).mean()
+
+    return df1
 
 
 # Determines if the latest candle is higher or lower than the previous candles

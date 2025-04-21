@@ -15,9 +15,11 @@ else:
 
 symbol = "XAUUSD"
 v75 = "Volatility 75 Index"
-tf = "H1"
+tf = mt.TIMEFRAME_M15
 
 # symbol = uf.symbol_selector()
 # timeframe = uf.timeframe_selector()
-lots = uf.lots_selector()
-print(f"LOTS = {lots}")
+df = uf.GetPriceData(v75, tf)
+# print(df)
+# print(df[df["bartype"] == 1].bartype.count())
+uf.ATRBullBear(df)
