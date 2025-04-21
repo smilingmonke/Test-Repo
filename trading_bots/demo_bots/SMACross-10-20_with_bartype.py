@@ -13,8 +13,8 @@ import discord_info as di
 import bot_functions as uf
 
 
-symbol = "Volatility 75 Index"  # uf.symbol_selector()
-tf = mt.TIMEFRAME_M15  # uf.timeframe_selector()
+symbol = uf.symbol_selector()  # "Volatility 75 Index"
+tf = uf.timeframe_selector()  # mt.TIMEFRAME_M15
 
 
 # Initialization of dataframe
@@ -22,8 +22,6 @@ def getData():
 
     df = uf.GetPriceData(symbol, tf)
     df = uf.ATRBullBear(df)
-    # df["ATR_Avg"] = df["ATR"].rolling(4).mean()
-    # df = df[df["MA20"] > 0]
 
     return df
 
