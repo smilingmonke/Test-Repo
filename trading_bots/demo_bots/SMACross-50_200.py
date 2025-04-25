@@ -116,6 +116,8 @@ def CrossAlert():
         print(df.tail(3))
         print("*" * 120)
         print("NO definite movemnt")
+        print("Sleeping for 1 minute😴")
+        time.sleep(60)
 
 
 # CrossAlert()
